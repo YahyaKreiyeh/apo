@@ -22,14 +22,14 @@ class AppColors {
   // Text
   static const primaryText = Color(0xFF301C1F);
   static const whiteText = Color(0xFFFFFFFF);
-  static const secondaryText = Color(0xFF86909B);
-  static const hintText = Color(0xFF86909B);
+  static const secondaryText = Color(0xFF8F959E);
+  static const hintText = Color(0xFF8F959E);
 
   // Fields
   static const outLine = Color(0xFFEAECF1);
 
   // Buttons
-  static const secondaryContainer = Color(0xFFFAFAFA);
+  static const secondaryContainer = Color(0xFFF5F6FA);
 
   // Toast
   static const greenToast = Color(0xFFD8FFED);
@@ -43,7 +43,7 @@ class AppColors {
   static const green = Color(0xFF00C069);
   static const orange = Color(0xFFDA9658);
   static const red = Color(0xFFEE451F);
-  static const grey = Colors.grey;
+  static const grey = Color(0xFFA2A2A2);
 
   // Old
   // Basics

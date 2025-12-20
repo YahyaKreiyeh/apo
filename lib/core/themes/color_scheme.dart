@@ -15,7 +15,7 @@ ColorScheme colorScheme() => const ColorScheme.light(
   onSurface: AppColors.onSurface,
 
   // Text
-  secondary: AppColors.secondaryText,
+  secondary: AppColors.secondary,
 
   // Borders
   outline: AppColors.outLine,
@@ -44,4 +44,7 @@ ColorScheme colorScheme() => const ColorScheme.light(
 extension RestoColorScheme on ColorScheme {
   Color get shimmerBase => AppColors.shimmerBase;
   Color get shimmerHighlight => AppColors.shimmerHighlight;
+  Color get secondaryText => AppColors.secondaryText;
+  Color get hintText => AppColors.hintText;
+  Color get grey => AppColors.grey;
 }

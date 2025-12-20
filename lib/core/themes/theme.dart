@@ -5,6 +5,7 @@ import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/dialog_theme.dart';
 import 'package:apo/core/themes/divider_theme.dart';
 import 'package:apo/core/themes/elevated_button_theme.dart';
+import 'package:apo/core/themes/icon_button_theme.dart';
 import 'package:apo/core/themes/input_decoration_theme.dart';
 import 'package:apo/core/themes/outlined_button_theme.dart';
 import 'package:apo/core/themes/primary_text_theme.dart';
@@ -32,5 +33,6 @@ ThemeData getTheme() {
     cardColor: AppColors.cardColor,
     bottomSheetTheme: bottomSheetTheme(),
     progressIndicatorTheme: progressIndicatorTheme(),
+    iconButtonTheme: iconButtonThemeData(),
   );
 }

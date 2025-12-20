@@ -1,4 +1,5 @@
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/themes/color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +16,7 @@ class CustomNavBar extends StatelessWidget {
     const Curve curve = Curves.easeOut;
     const double indicatorHeight = 3;
     final Color active = theme.colorScheme.primary;
-    final Color inactive = theme.colorScheme.secondary;
+    final Color inactive = theme.colorScheme.grey;
     final Color outline = theme.colorScheme.outline;
     final Color indicator = active;
     _Item home = _Item(icon: Icon(Icons.home_outlined), label: 'Home');
