@@ -2,19 +2,53 @@ import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/constants/theme_constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/models/result.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/utilities/device_utility.dart';
 import 'package:apo/core/widgets/network_image_placeholder.dart';
 import 'package:apo/core/widgets/shimmer_placeholder.dart';
 import 'package:apo/features/home/widgets/filter_chips.dart';
+import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/products_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    context.read<ProductsCubit>().loadInitial();
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      context.read<ProductsCubit>().loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +67,7 @@ class HomeView extends StatelessWidget {
         ],
       ),
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -150,53 +185,163 @@ class HomeView extends StatelessWidget {
               child: Text(AppStrings.topSellers, style: TextStyles.text17500),
             ),
           ),
-          SliverPadding(
-            padding: EdgeInsetsGeometry.symmetric(
-              horizontal: Constants.defaultPadding,
-              vertical: 10,
-            ),
-            sliver: SliverAlignedGrid.count(
-              itemBuilder: (context, index) {
-                final imageUrl = Constants.getPlaceHolderImage(
-                  (index + 1) * 10,
-                );
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
+          BlocBuilder<ProductsCubit, ProductsState>(
+            builder: (context, state) {
+              final showInitialLoading =
+                  state.status.isLoading && state.items.isEmpty;
+              final showError = state.status.isFailure && state.items.isEmpty;
+              if (showError) {
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Constants.defaultPadding,
+                      vertical: 20,
+                    ),
+                    child: Column(
                       children: [
-                        CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          height:
-                              (DeviceUtility.getScreenWidth(context) / 2) -
-                              Constants.defaultPadding -
-                              12,
-                          fit: BoxFit.cover,
-                          placeholder: (_, _) => ShimmerPlaceholder(),
-                          errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                        Text(
+                          state.status.failureMessage,
+                          style: TextStyles.text14400,
                         ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: IconButton(
-                            onPressed: null,
-                            icon: Icon(Icons.favorite_outline),
-                          ),
+                        VerticalSpace(12),
+                        ElevatedButton(
+                          onPressed: () =>
+                              context.read<ProductsCubit>().loadInitial(),
+                          child: Text(AppStrings.retry),
                         ),
                       ],
                     ),
-                    VerticalSpace(14),
-                    Text('Name'),
-                  ],
+                  ),
                 );
-              },
-              crossAxisCount: 2,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-            ),
+              }
+
+              final itemsCount =
+                  showInitialLoading ? 6 : state.items.length;
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Constants.defaultPadding,
+                  vertical: 10,
+                ),
+                sliver: SliverAlignedGrid.count(
+                  itemCount: itemsCount,
+                  itemBuilder: (context, index) {
+                    if (showInitialLoading) {
+                      return _ProductCardPlaceholder();
+                    }
+                    final product = state.items[index];
+                    final imageUrl = product.mainImage?.imageUrl ??
+                        Constants.getPlaceHolderImage((index + 1) * 10);
+                    return _ProductCard(
+                      imageUrl: imageUrl,
+                      name: product.productName,
+                      price: product.priceRange?.min,
+                    );
+                  },
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                ),
+              );
+            },
+          ),
+          BlocBuilder<ProductsCubit, ProductsState>(
+            builder: (context, state) {
+              if (!state.isLoadingMore) return const SliverToBoxAdapter();
+              return SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  final String imageUrl;
+  final String name;
+  final double? price;
+
+  const _ProductCard({
+    required this.imageUrl,
+    required this.name,
+    required this.price,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Stack(
+          children: [
+            CachedNetworkImage(
+              imageUrl: imageUrl,
+              height:
+                  (DeviceUtility.getScreenWidth(context) / 2) -
+                  Constants.defaultPadding -
+                  12,
+              fit: BoxFit.cover,
+              placeholder: (_, _) => ShimmerPlaceholder(),
+              errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                onPressed: null,
+                icon: Icon(Icons.favorite_outline),
+              ),
+            ),
+          ],
+        ),
+        VerticalSpace(14),
+        Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
+        if (price != null)
+          Text(
+            '\$${price!.toStringAsFixed(0)}',
+            style: TextStyles.text14400.copyWith(
+              color: Theme.of(context).colorScheme.secondaryText,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ProductCardPlaceholder extends StatelessWidget {
+  const _ProductCardPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height:
+              (DeviceUtility.getScreenWidth(context) / 2) -
+              Constants.defaultPadding -
+              12,
+          width: double.infinity,
+          child: ShimmerPlaceholder(),
+        ),
+        VerticalSpace(14),
+        Container(
+          height: 14,
+          width: 100,
+          color: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+        VerticalSpace(6),
+        Container(
+          height: 12,
+          width: 60,
+          color: Theme.of(context).colorScheme.secondaryContainer,
+        ),
+      ],
     );
   }
 }

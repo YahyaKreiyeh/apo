@@ -1,0 +1,119 @@
+class ProductEntity {
+  final int productId;
+  final String productSKU;
+  final String productName;
+  final String description;
+  final bool hasVariants;
+  final bool hasCustomization;
+  final int minimumOrderQuantity;
+  final int standardProductionDays;
+  final bool isActive;
+  final List<CategoryEntity> categories;
+  final ProductImageEntity? mainImage;
+  final int variantCount;
+  final PriceRangeEntity? priceRange;
+  final List<String> availableColors;
+  final List<String> availableSizes;
+  final List<VariantEntity> variants;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const ProductEntity({
+    required this.productId,
+    required this.productSKU,
+    required this.productName,
+    required this.description,
+    required this.hasVariants,
+    required this.hasCustomization,
+    required this.minimumOrderQuantity,
+    required this.standardProductionDays,
+    required this.isActive,
+    required this.categories,
+    required this.mainImage,
+    required this.variantCount,
+    required this.priceRange,
+    required this.availableColors,
+    required this.availableSizes,
+    required this.variants,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
+
+class CategoryEntity {
+  final int? categoryId;
+  final String? categoryName;
+
+  const CategoryEntity({
+    this.categoryId,
+    this.categoryName,
+  });
+}
+
+class ProductImageEntity {
+  final int imageId;
+  final String imageUrl;
+  final String thumbnailUrl;
+  final String imageType;
+  final int displayOrder;
+  final String altText;
+
+  const ProductImageEntity({
+    required this.imageId,
+    required this.imageUrl,
+    required this.thumbnailUrl,
+    required this.imageType,
+    required this.displayOrder,
+    required this.altText,
+  });
+}
+
+class PriceRangeEntity {
+  final double min;
+  final double max;
+
+  const PriceRangeEntity({
+    required this.min,
+    required this.max,
+  });
+}
+
+class VariantEntity {
+  final int variantId;
+  final String variantSKU;
+  final String colorName;
+  final String colorCode;
+  final SizeTypeEntity? sizeType;
+  final double basePrice;
+  final double weight;
+  final String dimensions;
+  final bool isActive;
+  final int inventoryAvailable;
+  final List<ProductImageEntity> images;
+
+  const VariantEntity({
+    required this.variantId,
+    required this.variantSKU,
+    required this.colorName,
+    required this.colorCode,
+    required this.sizeType,
+    required this.basePrice,
+    required this.weight,
+    required this.dimensions,
+    required this.isActive,
+    required this.inventoryAvailable,
+    required this.images,
+  });
+}
+
+class SizeTypeEntity {
+  final int sizeTypeId;
+  final String sizeCode;
+  final String sizeName;
+
+  const SizeTypeEntity({
+    required this.sizeTypeId,
+    required this.sizeCode,
+    required this.sizeName,
+  });
+}

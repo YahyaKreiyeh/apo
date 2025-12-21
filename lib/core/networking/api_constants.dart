@@ -3,6 +3,7 @@ class ApiConstants {
   static const String baseUrl = 'https://apolloemb.runasp.net/api/v1/';
 
   static const String login = 'auth/login';
+  static const String products = 'products';
 }
 
 class ApiErrors {

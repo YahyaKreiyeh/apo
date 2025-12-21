@@ -20,4 +20,5 @@ class AppStrings {
   static const String passwordRequired = 'Password is required';
   static const String passwordRequirements =
       'Password must be at least 8 characters and include upper, lower, number, and symbol';
+  static const String retry = 'Retry';
 }

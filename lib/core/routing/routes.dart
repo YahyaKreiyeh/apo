@@ -8,6 +8,7 @@ import 'package:apo/features/home/views/cart_view.dart';
 import 'package:apo/features/home/views/home_view.dart';
 import 'package:apo/features/home/views/orders_view.dart';
 import 'package:apo/features/home/views/profile_view.dart';
+import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -89,7 +90,10 @@ final _bottomNavRoutes = [
           GoRoute(
             name: RouteNames.home.name,
             path: RouteNames.home.path,
-            builder: (context, state) => HomeView(),
+            builder: (context, state) => BlocProvider(
+              create: (context) => getIt<ProductsCubit>(),
+              child: HomeView(),
+            ),
           ),
         ],
       ),
