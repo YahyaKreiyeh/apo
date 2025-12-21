@@ -16,16 +16,11 @@ StatefulNavigationShell? navigationShell;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-GoRouter constructRouter({required bool isAuthenticated}) {
-  final initialLocation = isAuthenticated
-      ? RouteNames.home.path
-      : RouteNames.login.path;
-  return GoRouter(
-    navigatorKey: navigatorKey,
-    initialLocation: initialLocation,
-    routes: [..._authenticationRoutes, ..._bottomNavRoutes, ..._appRoutes],
-  );
-}
+final GoRouter router = GoRouter(
+  navigatorKey: navigatorKey,
+  initialLocation: RouteNames.home.path,
+  routes: [..._authenticationRoutes, ..._bottomNavRoutes, ..._appRoutes],
+);
 
 final _authenticationRoutes = [
   // GoRoute(
