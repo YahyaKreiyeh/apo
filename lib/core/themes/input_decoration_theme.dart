@@ -25,5 +25,6 @@ InputDecorationTheme inputDecorationTheme() {
     errorStyle: TextStyles.text14400.copyWith(color: AppColors.error),
     contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     suffixIconColor: AppColors.hintText,
+    prefixIconColor: AppColors.hintText,
   );
 }

@@ -87,7 +87,7 @@ abstract class BaseRepository {
   void _handleAuthErrors(ApiErrorModel error) {
     final status = error.status;
 
-    if (status == 401 || status == 403) {
+    if (status == 403) {
       unawaited(_clearSession());
     }
   }
@@ -95,6 +95,6 @@ abstract class BaseRepository {
   Future<void> _clearSession() async {
     await PreferencesHelper.clear();
     await SecureStorageHelper.clear();
-    navigatorKey.currentContext?.goNamed(RouteNames.login.path);
+    navigatorKey.currentContext?.goNamed(RouteNames.login.name);
   }
 }

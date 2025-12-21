@@ -46,6 +46,29 @@ class SecureStorageHelper {
     DioFactory.setAuthToken(null);
   }
 
+  /// Saves login tokens to secure storage and updates Dio headers.
+  static Future<void> saveLoginTokens({
+    required String accessToken,
+    required String refreshToken,
+    String? accessTokenExpiresAt,
+    String? refreshTokenExpiresAt,
+  }) async {
+    await saveAuthToken(accessToken);
+    await setString(SecureStorageKey.refreshToken, refreshToken);
+    if (accessTokenExpiresAt != null && accessTokenExpiresAt.isNotEmpty) {
+      await setString(
+        SecureStorageKey.accessTokenExpiresAt,
+        accessTokenExpiresAt,
+      );
+    }
+    if (refreshTokenExpiresAt != null && refreshTokenExpiresAt.isNotEmpty) {
+      await setString(
+        SecureStorageKey.refreshTokenExpiresAt,
+        refreshTokenExpiresAt,
+      );
+    }
+  }
+
   /// Saves the FCM token to secure storage.
   static Future<void> saveFcmToken(String token) async {
     await setString(SecureStorageKey.fcmToken, token);

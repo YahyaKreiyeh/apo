@@ -4,22 +4,17 @@ part 'base_api_response.g.dart';
 
 @JsonSerializable(genericArgumentFactories: true)
 class BaseApiResponse<T> {
-  @JsonKey(name: 'Status')
-  final bool status;
-  @JsonKey(name: 'Code')
-  final int code;
-  @JsonKey(name: 'Data')
-  final T? data;
-  @JsonKey(name: 'Message')
   final String? message;
-  @JsonKey(name: 'TotalCount')
-  final int? totalCount;
+  final String? error;
+  final int httpStatus;
+  final bool success;
+  final T? data;
   const BaseApiResponse({
-    required this.status,
-    required this.code,
+    required this.message,
+    required this.error,
+    required this.httpStatus,
+    required this.success,
     this.data,
-    this.message,
-    this.totalCount,
   });
 
   factory BaseApiResponse.fromJson(

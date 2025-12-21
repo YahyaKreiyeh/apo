@@ -1,5 +1,7 @@
 import 'package:apo/core/di/dependency_injection.dart';
 import 'package:apo/core/routing/route_names.dart';
+import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart';
+import 'package:apo/features/authentication/presentation/views/login_view.dart';
 import 'package:apo/features/dashboard/views/dashboard_view.dart';
 import 'package:apo/features/dashboard/widgets/bottom_nav_cubit.dart';
 import 'package:apo/features/home/views/cart_view.dart';
@@ -14,11 +16,16 @@ StatefulNavigationShell? navigationShell;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-final GoRouter goRouter = GoRouter(
-  navigatorKey: navigatorKey,
-  initialLocation: RouteNames.home.path,
-  routes: [..._authenticationRoutes, ..._bottomNavRoutes, ..._appRoutes],
-);
+GoRouter constructRouter({required bool isAuthenticated}) {
+  final initialLocation = isAuthenticated
+      ? RouteNames.home.path
+      : RouteNames.login.path;
+  return GoRouter(
+    navigatorKey: navigatorKey,
+    initialLocation: initialLocation,
+    routes: [..._authenticationRoutes, ..._bottomNavRoutes, ..._appRoutes],
+  );
+}
 
 final _authenticationRoutes = [
   // GoRoute(
@@ -33,19 +40,19 @@ final _authenticationRoutes = [
   //     ),
   //   ),
   // ),
-  // GoRoute(
-  //   path: RouteNames.login.path,
-  //   name: RouteNames.login.name,
-  //   builder: (context, state) {
-  //     final enableBackButton = state.extra is bool
-  //         ? state.extra as bool
-  //         : false;
-  //     return BlocProvider(
-  //       create: (context) => getIt<LoginCubit>(),
-  //       child: LoginView(enableBackButton: enableBackButton),
-  //     );
-  //   },
-  // ),
+  GoRoute(
+    path: RouteNames.login.path,
+    name: RouteNames.login.name,
+    builder: (context, state) {
+      final enableBackButton = state.extra is bool
+          ? state.extra as bool
+          : false;
+      return BlocProvider(
+        create: (context) => getIt<LoginCubit>(),
+        child: LoginView(enableBackButton: enableBackButton),
+      );
+    },
+  ),
   // GoRoute(
   //   path: RouteNames.codeVerification.path,
   //   name: RouteNames.codeVerification.name,
