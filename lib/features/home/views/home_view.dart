@@ -1,21 +1,24 @@
+//TODO: refactor to use select instead of bloc builder
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/constants/theme_constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
 import 'package:apo/core/models/result.dart';
+import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/utilities/device_utility.dart';
 import 'package:apo/core/widgets/network_image_placeholder.dart';
 import 'package:apo/core/widgets/shimmer_placeholder.dart';
-import 'package:apo/features/home/widgets/filter_chips.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_state.dart';
+import 'package:apo/features/home/widgets/filter_chips.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -215,8 +218,7 @@ class _HomeViewState extends State<HomeView> {
                 );
               }
 
-              final itemsCount =
-                  showInitialLoading ? 6 : state.items.length;
+              final itemsCount = showInitialLoading ? 6 : state.items.length;
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: Constants.defaultPadding,
@@ -229,12 +231,17 @@ class _HomeViewState extends State<HomeView> {
                       return _ProductCardPlaceholder();
                     }
                     final product = state.items[index];
-                    final imageUrl = product.mainImage?.imageUrl ??
+                    final imageUrl =
+                        product.mainImage?.imageUrl ??
                         Constants.getPlaceHolderImage((index + 1) * 10);
                     return _ProductCard(
                       imageUrl: imageUrl,
                       name: product.productName,
                       price: product.priceRange?.min,
+                      onTap: () => context.pushNamed(
+                        RouteNames.product.name,
+                        pathParameters: {'id': product.productId.toString()},
+                      ),
                     );
                   },
                   crossAxisCount: 2,
@@ -265,50 +272,55 @@ class _ProductCard extends StatelessWidget {
   final String imageUrl;
   final String name;
   final double? price;
+  final VoidCallback? onTap;
 
   const _ProductCard({
     required this.imageUrl,
     required this.name,
     required this.price,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            CachedNetworkImage(
-              imageUrl: imageUrl,
-              height:
-                  (DeviceUtility.getScreenWidth(context) / 2) -
-                  Constants.defaultPadding -
-                  12,
-              fit: BoxFit.cover,
-              placeholder: (_, _) => ShimmerPlaceholder(),
-              errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                onPressed: null,
-                icon: Icon(Icons.favorite_outline),
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              CachedNetworkImage(
+                imageUrl: imageUrl,
+                height:
+                    (DeviceUtility.getScreenWidth(context) / 2) -
+                    Constants.defaultPadding -
+                    12,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => ShimmerPlaceholder(),
+                errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  onPressed: null,
+                  icon: Icon(Icons.favorite_outline),
+                ),
+              ),
+            ],
+          ),
+          VerticalSpace(14),
+          Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (price != null)
+            Text(
+              '\$${price!.toStringAsFixed(0)}',
+              style: TextStyles.text14400.copyWith(
+                color: Theme.of(context).colorScheme.secondaryText,
               ),
             ),
-          ],
-        ),
-        VerticalSpace(14),
-        Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
-        if (price != null)
-          Text(
-            '\$${price!.toStringAsFixed(0)}',
-            style: TextStyles.text14400.copyWith(
-              color: Theme.of(context).colorScheme.secondaryText,
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

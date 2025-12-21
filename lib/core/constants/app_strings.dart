@@ -21,4 +21,6 @@ class AppStrings {
   static const String passwordRequirements =
       'Password must be at least 8 characters and include upper, lower, number, and symbol';
   static const String retry = 'Retry';
+  static const String product = 'Product';
+  static const String addToCart = 'Add to cart';
 }

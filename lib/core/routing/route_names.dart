@@ -4,6 +4,7 @@ enum RouteNames {
   cart('cart', '/cart'),
   orders('orders', '/orders'),
   profile('profile', '/profile'),
+  product('product', '/product/:id'),
 
   // Authentication
   login('login', '/login'),

@@ -4,11 +4,13 @@ import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart
 import 'package:apo/features/authentication/presentation/views/login_view.dart';
 import 'package:apo/features/dashboard/views/dashboard_view.dart';
 import 'package:apo/features/dashboard/widgets/bottom_nav_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:apo/features/home/views/cart_view.dart';
 import 'package:apo/features/home/views/home_view.dart';
 import 'package:apo/features/home/views/orders_view.dart';
+import 'package:apo/features/home/views/product_view.dart';
 import 'package:apo/features/home/views/profile_view.dart';
-import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -131,4 +133,17 @@ final _bottomNavRoutes = [
   ),
 ];
 
-final _appRoutes = [];
+final _appRoutes = [
+  GoRoute(
+    path: RouteNames.product.path,
+    name: RouteNames.product.name,
+    builder: (context, state) {
+      final idParam = state.pathParameters['id'] ?? '0';
+      final productId = int.tryParse(idParam) ?? 0;
+      return BlocProvider(
+        create: (context) => getIt<ProductDetailsCubit>(param1: productId),
+        child: ProductView(),
+      );
+    },
+  ),
+];

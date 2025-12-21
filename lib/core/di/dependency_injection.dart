@@ -7,7 +7,9 @@ import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart
 import 'package:apo/features/home/data/repositories/products_repository_impl.dart';
 import 'package:apo/features/home/data/services/products_api_service.dart';
 import 'package:apo/features/home/domain/repositories/products_repository.dart';
+import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
+import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -27,12 +29,21 @@ Future<void> setupGetIt() async {
 
   getIt.registerFactory(() => LoginCubit(getIt<LoginUseCase>()));
   getIt.registerFactory(() => ProductsCubit(getIt<GetProductsUseCase>()));
+  getIt.registerFactoryParam<ProductDetailsCubit, int, void>(
+    (productId, _) => ProductDetailsCubit(
+      getIt<GetProductDetailsUseCase>(),
+      productId: productId,
+    ),
+  );
 
   getIt.registerLazySingleton<LoginUseCase>(
     () => LoginUseCase(getIt<AuthenticationRepository>()),
   );
   getIt.registerLazySingleton<GetProductsUseCase>(
     () => GetProductsUseCase(getIt<ProductsRepository>()),
+  );
+  getIt.registerLazySingleton<GetProductDetailsUseCase>(
+    () => GetProductDetailsUseCase(getIt<ProductsRepository>()),
   );
 
   getIt.registerLazySingleton<AuthenticationRepository>(
