@@ -2,6 +2,7 @@ class Constants {
   Constants._();
 
   static const double defaultPadding = 16.0;
+  static const double defaultRadius = 16.0;
   static const double modalBottomSheetPadding = 16.0;
   static const double adsBannerRadius = 16.0;
   static const double imageRadius = 12.0;

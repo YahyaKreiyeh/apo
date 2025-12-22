@@ -27,6 +27,11 @@ class AppStrings {
   static const String cartEmpty = 'Your cart is empty';
   static const String addedToCart = 'Added to cart';
   static const String quantity = 'Quantity';
+  static const String sku = 'SKU';
+  static const String cartItems = 'Cart Items';
+  static const String cartReviewNote =
+      'Review and customize your order before requesting a quote.';
+  static const String unitPrice = 'Unit Price';
   static const String hasPersonalization = 'Has personalization';
   static const String personalization = 'Personalization';
   static const String descriptionTitle = 'Description';

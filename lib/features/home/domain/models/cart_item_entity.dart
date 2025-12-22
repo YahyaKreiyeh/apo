@@ -1,6 +1,7 @@
 class CartItemEntity {
   final int productId;
   final String name;
+  final String productSku;
   final double? unitPrice;
   final String imageUrl;
   final int quantity;
@@ -9,6 +10,7 @@ class CartItemEntity {
   const CartItemEntity({
     required this.productId,
     required this.name,
+    required this.productSku,
     required this.unitPrice,
     required this.imageUrl,
     required this.quantity,
@@ -20,11 +22,13 @@ class CartItemEntity {
     double? unitPrice,
     String? imageUrl,
     String? name,
+    String? productSku,
     bool? hasPersonalization,
   }) {
     return CartItemEntity(
       productId: productId,
       name: name ?? this.name,
+      productSku: productSku ?? this.productSku,
       unitPrice: unitPrice ?? this.unitPrice,
       imageUrl: imageUrl ?? this.imageUrl,
       quantity: quantity ?? this.quantity,

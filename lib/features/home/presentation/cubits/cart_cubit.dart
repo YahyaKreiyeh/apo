@@ -18,10 +18,12 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
           item.productId == product.productId &&
           item.hasPersonalization == hasPersonalization,
     );
-    final imageUrl =
-        product.images.isNotEmpty ? product.images.first.imageUrl : '';
-    final unitPrice =
-        product.variants.isNotEmpty ? product.variants.first.basePrice : null;
+    final imageUrl = product.images.isNotEmpty
+        ? product.images.first.imageUrl
+        : '';
+    final unitPrice = product.variants.isNotEmpty
+        ? product.variants.first.basePrice
+        : null;
 
     if (existingIndex == -1) {
       final updatedItems = [
@@ -29,6 +31,7 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
         CartItemEntity(
           productId: product.productId,
           name: product.productName,
+          productSku: product.productSKU,
           unitPrice: unitPrice,
           imageUrl: imageUrl,
           quantity: safeQuantity,
@@ -41,17 +44,49 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
 
     final existing = state.items[existingIndex];
     final updatedItems = [...state.items];
-    updatedItems[existingIndex] =
-        existing.copyWith(quantity: existing.quantity + safeQuantity);
+    updatedItems[existingIndex] = existing.copyWith(
+      quantity: existing.quantity + safeQuantity,
+    );
     safeEmit(state.copyWith(items: updatedItems));
   }
 
   void removeProduct(int productId) {
     safeEmit(
       state.copyWith(
-        items: state.items.where((item) => item.productId != productId).toList(),
+        items: state.items
+            .where((item) => item.productId != productId)
+            .toList(),
       ),
     );
+  }
+
+  void removeItem(int productId, bool hasPersonalization) {
+    safeEmit(
+      state.copyWith(
+        items: state.items
+            .where(
+              (item) =>
+                  item.productId != productId ||
+                  item.hasPersonalization != hasPersonalization,
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  void updateQuantity(int productId, bool hasPersonalization, int quantity) {
+    final safeQuantity = quantity < 1 ? 1 : quantity;
+    final index = state.items.indexWhere(
+      (item) =>
+          item.productId == productId &&
+          item.hasPersonalization == hasPersonalization,
+    );
+    if (index == -1) {
+      return;
+    }
+    final updatedItems = [...state.items];
+    updatedItems[index] = updatedItems[index].copyWith(quantity: safeQuantity);
+    safeEmit(state.copyWith(items: updatedItems));
   }
 
   void clear() {
