@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProductDetailsState {
 
- Result<ProductDetailsEntity> get status;
+ Result<ProductDetailsEntity> get status; int get quantity;
 /// Create a copy of ProductDetailsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ProductDetailsStateCopyWith<ProductDetailsState> get copyWith => _$ProductDetai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDetailsState&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDetailsState&&(identical(other.status, status) || other.status == status)&&(identical(other.quantity, quantity) || other.quantity == quantity));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status);
+int get hashCode => Object.hash(runtimeType,status,quantity);
 
 @override
 String toString() {
-  return 'ProductDetailsState(status: $status)';
+  return 'ProductDetailsState(status: $status, quantity: $quantity)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ProductDetailsStateCopyWith<$Res>  {
   factory $ProductDetailsStateCopyWith(ProductDetailsState value, $Res Function(ProductDetailsState) _then) = _$ProductDetailsStateCopyWithImpl;
 @useResult
 $Res call({
- Result<ProductDetailsEntity> status
+ Result<ProductDetailsEntity> status, int quantity
 });
 
 
@@ -62,10 +62,11 @@ class _$ProductDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of ProductDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? quantity = null,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as Result<ProductDetailsEntity>,
+as Result<ProductDetailsEntity>,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 /// Create a copy of ProductDetailsState
@@ -159,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Result<ProductDetailsEntity> status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Result<ProductDetailsEntity> status,  int quantity)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductDetailsState() when $default != null:
-return $default(_that.status);case _:
+return $default(_that.status,_that.quantity);case _:
   return orElse();
 
 }
@@ -180,10 +181,10 @@ return $default(_that.status);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Result<ProductDetailsEntity> status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Result<ProductDetailsEntity> status,  int quantity)  $default,) {final _that = this;
 switch (_that) {
 case _ProductDetailsState():
-return $default(_that.status);case _:
+return $default(_that.status,_that.quantity);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.status);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Result<ProductDetailsEntity> status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Result<ProductDetailsEntity> status,  int quantity)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductDetailsState() when $default != null:
-return $default(_that.status);case _:
+return $default(_that.status,_that.quantity);case _:
   return null;
 
 }
@@ -215,10 +216,11 @@ return $default(_that.status);case _:
 
 
 class _ProductDetailsState implements ProductDetailsState {
-  const _ProductDetailsState({this.status = const Result.empty()});
+  const _ProductDetailsState({this.status = const Result.empty(), this.quantity = 1});
   
 
 @override@JsonKey() final  Result<ProductDetailsEntity> status;
+@override@JsonKey() final  int quantity;
 
 /// Create a copy of ProductDetailsState
 /// with the given fields replaced by the non-null parameter values.
@@ -230,16 +232,16 @@ _$ProductDetailsStateCopyWith<_ProductDetailsState> get copyWith => __$ProductDe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDetailsState&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDetailsState&&(identical(other.status, status) || other.status == status)&&(identical(other.quantity, quantity) || other.quantity == quantity));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status);
+int get hashCode => Object.hash(runtimeType,status,quantity);
 
 @override
 String toString() {
-  return 'ProductDetailsState(status: $status)';
+  return 'ProductDetailsState(status: $status, quantity: $quantity)';
 }
 
 
@@ -250,7 +252,7 @@ abstract mixin class _$ProductDetailsStateCopyWith<$Res> implements $ProductDeta
   factory _$ProductDetailsStateCopyWith(_ProductDetailsState value, $Res Function(_ProductDetailsState) _then) = __$ProductDetailsStateCopyWithImpl;
 @override @useResult
 $Res call({
- Result<ProductDetailsEntity> status
+ Result<ProductDetailsEntity> status, int quantity
 });
 
 
@@ -267,10 +269,11 @@ class __$ProductDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of ProductDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? quantity = null,}) {
   return _then(_ProductDetailsState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as Result<ProductDetailsEntity>,
+as Result<ProductDetailsEntity>,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

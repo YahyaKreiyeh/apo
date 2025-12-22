@@ -25,4 +25,13 @@ class ProductDetailsCubit extends Cubit<ProductDetailsState>
           safeEmit(state.copyWith(status: Result.failure(error: apiError))),
     );
   }
+
+  void increaseQuantity() {
+    safeEmit(state.copyWith(quantity: state.quantity + 1));
+  }
+
+  void decreaseQuantity() {
+    if (state.quantity <= 1) return;
+    safeEmit(state.copyWith(quantity: state.quantity - 1));
+  }
 }

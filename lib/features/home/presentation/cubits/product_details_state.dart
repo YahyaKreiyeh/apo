@@ -8,5 +8,6 @@ part 'product_details_state.freezed.dart';
 abstract class ProductDetailsState with _$ProductDetailsState {
   const factory ProductDetailsState({
     @Default(Result.empty()) Result<ProductDetailsEntity> status,
+    @Default(1) int quantity,
   }) = _ProductDetailsState;
 }

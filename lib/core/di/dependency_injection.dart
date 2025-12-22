@@ -9,6 +9,7 @@ import 'package:apo/features/home/data/services/products_api_service.dart';
 import 'package:apo/features/home/domain/repositories/products_repository.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
+import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:dio/dio.dart';
@@ -29,6 +30,7 @@ Future<void> setupGetIt() async {
 
   getIt.registerFactory(() => LoginCubit(getIt<LoginUseCase>()));
   getIt.registerFactory(() => ProductsCubit(getIt<GetProductsUseCase>()));
+  getIt.registerLazySingleton<CartCubit>(() => CartCubit());
   getIt.registerFactoryParam<ProductDetailsCubit, int, void>(
     (productId, _) => ProductDetailsCubit(
       getIt<GetProductDetailsUseCase>(),

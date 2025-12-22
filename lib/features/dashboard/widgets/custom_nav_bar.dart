@@ -1,6 +1,10 @@
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
+import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomNavBar extends StatelessWidget {
@@ -20,7 +24,12 @@ class CustomNavBar extends StatelessWidget {
     final Color outline = theme.colorScheme.outline;
     final Color indicator = active;
     _Item home = _Item(icon: Icon(Icons.home_outlined), label: 'Home');
-    _Item cart = _Item(icon: Icon(Icons.shopping_cart_outlined), label: 'Cart');
+    _Item cart = _Item(
+      icon: _CartBadgeIcon(
+        icon: Icon(Icons.shopping_cart_outlined),
+      ),
+      label: 'Cart',
+    );
     _Item orders = _Item(icon: Icon(Icons.list_outlined), label: 'Orders');
     _Item profile = _Item(icon: Icon(Icons.person_outline), label: 'Profile');
     List<_Item> items = [home, cart, orders, profile];
@@ -122,4 +131,32 @@ class _Item {
   const _Item({required this.icon, required this.label});
   final Widget icon;
   final String label;
+}
+
+class _CartBadgeIcon extends StatelessWidget {
+  final Icon icon;
+
+  const _CartBadgeIcon({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<CartCubit, CartState>(
+      builder: (context, state) {
+        final count = state.totalItems;
+        if (count <= 0) return icon;
+        return Badge(
+          backgroundColor: AppColors.red,
+          label: Text(
+            count > 99 ? '99+' : count.toString(),
+            style: const TextStyle(
+              color: AppColors.whiteText,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          child: icon,
+        );
+      },
+    );
+  }
 }

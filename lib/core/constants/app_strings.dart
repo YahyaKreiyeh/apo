@@ -23,4 +23,8 @@ class AppStrings {
   static const String retry = 'Retry';
   static const String product = 'Product';
   static const String addToCart = 'Add to cart';
+  static const String cart = 'Cart';
+  static const String cartEmpty = 'Your cart is empty';
+  static const String addedToCart = 'Added to cart';
+  static const String quantity = 'Quantity';
 }
