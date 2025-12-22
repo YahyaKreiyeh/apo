@@ -9,5 +9,6 @@ abstract class ProductDetailsState with _$ProductDetailsState {
   const factory ProductDetailsState({
     @Default(Result.empty()) Result<ProductDetailsEntity> status,
     @Default(1) int quantity,
+    @Default(false) bool hasPersonalization,
   }) = _ProductDetailsState;
 }

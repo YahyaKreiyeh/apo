@@ -21,16 +21,13 @@ class CartView extends StatelessWidget {
         builder: (context, state) {
           if (state.items.isEmpty) {
             return Center(
-              child: Text(
-                AppStrings.cartEmpty,
-                style: TextStyles.text14400,
-              ),
+              child: Text(AppStrings.cartEmpty, style: TextStyles.text14400),
             );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(Constants.defaultPadding),
             itemCount: state.items.length,
-            separatorBuilder: (_, __) => VerticalSpace(12),
+            separatorBuilder: (_, _) => VerticalSpace(12),
             itemBuilder: (context, index) {
               final item = state.items[index];
               return Container(
@@ -39,50 +36,71 @@ class CartView extends StatelessWidget {
                   color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: item.imageUrl.isEmpty
-                          ? const NetworkImagePlaceholder()
-                          : CachedNetworkImage(
-                              imageUrl: item.imageUrl,
-                              width: 64,
-                              height: 64,
-                              fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
-                                  NetworkImagePlaceholder(),
-                            ),
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: item.imageUrl.isEmpty
+                              ? const NetworkImagePlaceholder()
+                              : CachedNetworkImage(
+                                  imageUrl: item.imageUrl,
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, _, _) =>
+                                      NetworkImagePlaceholder(),
+                                ),
+                        ),
+                        HorizontalSpace(12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.name,
+                                style: TextStyles.text14400,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              VerticalSpace(4),
+                              Text(
+                                item.unitPrice == null
+                                    ? '-'
+                                    : '\$${item.unitPrice!.toStringAsFixed(0)}',
+                                style: TextStyles.text14400.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        VerticalSpace(4),
+                        Text('x${item.quantity}', style: TextStyles.text14400),
+                      ],
                     ),
-                    HorizontalSpace(12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.name,
-                            style: TextStyles.text14400,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          VerticalSpace(4),
-                          Text(
-                            item.unitPrice == null
-                                ? '-'
-                                : '\$${item.unitPrice!.toStringAsFixed(0)}',
-                            style: TextStyles.text14400.copyWith(
-                              color:
-                                  Theme.of(context).colorScheme.secondaryText,
-                            ),
-                          ),
-                        ],
+                    if (item.hasPersonalization) ...[
+                      VerticalSpace(8),
+                      Text(
+                        '${AppStrings.productionNotes} ${AppStrings.optional}',
                       ),
-                    ),
-                    VerticalSpace(4),
-                    Text(
-                      'x${item.quantity}',
-                      style: TextStyles.text14400,
-                    ),
+                      VerticalSpace(8),
+                      TextField(
+                        onTapOutside: (_) =>
+                            FocusManager.instance.primaryFocus?.unfocus(),
+                        decoration: InputDecoration(
+                          hintText: AppStrings
+                              .logoPlacementThreadColorsSpecialInstructions,
+                          hintMaxLines: 2,
+                          border: const OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.done,
+                      ),
+                    ],
                   ],
                 ),
               );

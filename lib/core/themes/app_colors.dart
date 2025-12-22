@@ -5,7 +5,7 @@ class AppColors {
 
   // New
   // Primaries
-  static const primary = Color(0xFF006498);
+  static const primary = Color(0xFF6366f1);
   static const secondary = Color(0xFFC2EAFF);
   static const primaryFixed = Color(0xFFFFD9CF);
   static const surface = Color(0xFFFFFFFF);
@@ -20,7 +20,7 @@ class AppColors {
   static const background = Color(0xFF301C1F);
 
   // Text
-  static const primaryText = Color(0xFF301C1F);
+  static const primaryText = Color(0xFF000000);
   static const whiteText = Color(0xFFFFFFFF);
   static const secondaryText = Color(0xFF8F959E);
   static const hintText = Color(0xFF8F959E);

@@ -27,4 +27,24 @@ class AppStrings {
   static const String cartEmpty = 'Your cart is empty';
   static const String addedToCart = 'Added to cart';
   static const String quantity = 'Quantity';
+  static const String hasPersonalization = 'Has personalization';
+  static const String personalization = 'Personalization';
+  static const String descriptionTitle = 'Description';
+  static const String availableVariants = 'Available Variants';
+  static const String productionInformation = 'Production Information';
+  static const String minimumOrder = 'Minimum Order';
+  static const String standardProduction = 'Standard Production';
+  static const String rushProduction = 'Rush Production';
+  static const String location = 'Location';
+  static const String categories = 'Categories';
+  static const String inStock = 'In Stock';
+  static const String outOfStock = 'Out of Stock';
+  static const String multipleVariants = 'Multiple Variants';
+  static const String customization = 'Customization';
+  static const String usaMade = 'USA Made';
+  static const String model3d = '3D Model';
+  static const String productionNotes = 'Production Notes';
+  static const String optional = '(optional)';
+  static const String logoPlacementThreadColorsSpecialInstructions =
+      'eg., Logo placement, thread colors, special instructions...';
 }

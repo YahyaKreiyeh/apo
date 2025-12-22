@@ -7,10 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
   CartCubit() : super(const CartState());
 
-  void addProduct(ProductDetailsEntity product, {int quantity = 1}) {
+  void addProduct(
+    ProductDetailsEntity product, {
+    int quantity = 1,
+    bool hasPersonalization = false,
+  }) {
     final safeQuantity = quantity < 1 ? 1 : quantity;
     final existingIndex = state.items.indexWhere(
-      (item) => item.productId == product.productId,
+      (item) =>
+          item.productId == product.productId &&
+          item.hasPersonalization == hasPersonalization,
     );
     final imageUrl =
         product.images.isNotEmpty ? product.images.first.imageUrl : '';
@@ -26,6 +32,7 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
           unitPrice: unitPrice,
           imageUrl: imageUrl,
           quantity: safeQuantity,
+          hasPersonalization: hasPersonalization,
         ),
       ];
       safeEmit(state.copyWith(items: updatedItems));

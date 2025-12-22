@@ -34,4 +34,8 @@ class ProductDetailsCubit extends Cubit<ProductDetailsState>
     if (state.quantity <= 1) return;
     safeEmit(state.copyWith(quantity: state.quantity - 1));
   }
+
+  void setHasPersonalization(bool value) {
+    safeEmit(state.copyWith(hasPersonalization: value));
+  }
 }

@@ -11,5 +11,6 @@ abstract class CartState with _$CartState {
 }
 
 extension CartStateX on CartState {
-  int get totalItems => items.length;
+  int get totalItems =>
+      items.fold<int>(0, (total, item) => total + item.quantity);
 }

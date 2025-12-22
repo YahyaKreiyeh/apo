@@ -31,27 +31,18 @@ class ProductView extends StatelessWidget {
       builder: (context, state) {
         final product = state.status.successValue;
         return Scaffold(
-          appBar: AppBar(
-            title: Text(AppStrings.product),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: BlocBuilder<CartCubit, CartState>(
-                  builder: (context, cartState) {
-                    return IconButton.filled(
-                      onPressed: () => context.goNamed(RouteNames.cart.name),
-                      icon: _CartBadgeIcon(count: cartState.totalItems),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
           bottomNavigationBar: SafeArea(
             minimum: const EdgeInsets.all(Constants.defaultPadding),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                _PersonalizationToggle(
+                  value: state.hasPersonalization,
+                  onChanged: (value) => context
+                      .read<ProductDetailsCubit>()
+                      .setHasPersonalization(value),
+                ),
+                VerticalSpace(12),
                 _QuantityPicker(
                   quantity: state.quantity,
                   onDecrease: () =>
@@ -66,9 +57,11 @@ class ProductView extends StatelessWidget {
                     onPressed: product == null
                         ? null
                         : () {
-                            context
-                                .read<CartCubit>()
-                                .addProduct(product, quantity: state.quantity);
+                            context.read<CartCubit>().addProduct(
+                              product,
+                              quantity: state.quantity,
+                              hasPersonalization: state.hasPersonalization,
+                            );
                             AppToast.show(
                               message: AppStrings.addedToCart,
                               type: AppToastType.success,
@@ -186,45 +179,175 @@ class _ProductContent extends StatelessWidget {
         ? product.images.first.imageUrl
         : Constants.getPlaceHolderImage(10);
     final price = _findBasePrice(product.variants);
+    final inStock = product.isStockItem;
+    final categoryNames = product.categories
+        .map((category) => category.categoryName ?? '')
+        .where((name) => name.isNotEmpty)
+        .toList();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(Constants.defaultPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              height: DeviceUtility.getScreenWidth(context) * 0.8,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (_, _) => ShimmerPlaceholder(),
-              errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-            ),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  height: DeviceUtility.getScreenWidth(context) * 0.8,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => ShimmerPlaceholder(),
+                  errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: Constants.defaultPadding),
+                child: Row(
+                  children: [
+                    IconButton.filled(
+                      onPressed: () => context.pop(),
+                      icon: Icon(Icons.arrow_back),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.secondaryContainer
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    Spacer(),
+                    IconButton.filled(
+                      onPressed: () {},
+                      icon: Icon(Icons.favorite_outline),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.secondaryContainer
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    BlocBuilder<CartCubit, CartState>(
+                      builder: (context, cartState) {
+                        return IconButton.filled(
+                          onPressed: () =>
+                              context.goNamed(RouteNames.cart.name),
+                          icon: _CartBadgeIcon(count: cartState.totalItems),
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.secondaryContainer
+                                .withValues(alpha: 0.5),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           VerticalSpace(16),
           Text(product.productName, style: TextStyles.text17500),
+          VerticalSpace(4),
+          Text(
+            product.productSKU,
+            style: TextStyles.text14400.copyWith(
+              color: Theme.of(context).colorScheme.secondaryText,
+            ),
+          ),
           if (price != null)
             Text(
               '\$${price.toStringAsFixed(0)}',
-              style: TextStyles.text14400.copyWith(
-                color: Theme.of(context).colorScheme.secondaryText,
+              style: TextStyles.text28600.copyWith(
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           VerticalSpace(12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoChip(
+                label: inStock ? AppStrings.inStock : AppStrings.outOfStock,
+              ),
+              if (product.hasVariants || product.variants.length > 1)
+                _InfoChip(label: AppStrings.multipleVariants),
+              if (product.hasCustomization)
+                _InfoChip(label: AppStrings.customization),
+              if (product.isUSAMade) _InfoChip(label: AppStrings.usaMade),
+              if (product.model3DUrl.isNotEmpty)
+                _InfoChip(label: AppStrings.model3d),
+            ],
+          ),
+          VerticalSpace(12),
+          _SectionHeader(title: AppStrings.descriptionTitle),
+          VerticalSpace(8),
           Text(product.description, style: TextStyles.text14400),
+          if (categoryNames.isNotEmpty) ...[
+            VerticalSpace(16),
+            _SectionHeader(title: AppStrings.categories),
+            VerticalSpace(8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: categoryNames
+                  .map((name) => _TagChip(label: name))
+                  .toList(),
+            ),
+          ],
+          if (product.variants.isNotEmpty) ...[
+            VerticalSpace(16),
+            _SectionHeader(title: AppStrings.availableVariants),
+            VerticalSpace(8),
+            Column(
+              children: product.variants
+                  .map(
+                    (variant) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _VariantCard(variant: variant),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
           VerticalSpace(16),
-          _InfoRow(label: 'SKU', value: product.productSKU),
-          _InfoRow(
-            label: 'MOQ',
-            value: product.minimumOrderQuantity.toString(),
+          _SectionHeader(title: AppStrings.productionInformation),
+          VerticalSpace(8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final itemWidth = (constraints.maxWidth - 12) / 2;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoTile(
+                      title: AppStrings.minimumOrder,
+                      value: '${product.minimumOrderQuantity} units',
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoTile(
+                      title: AppStrings.standardProduction,
+                      value: '${product.standardProductionDays} days',
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoTile(
+                      title: AppStrings.rushProduction,
+                      value: '${product.rushProductionDays} days',
+                    ),
+                  ),
+                  if (product.manufacturingLocation.isNotEmpty)
+                    SizedBox(
+                      width: itemWidth,
+                      child: _InfoTile(
+                        title: AppStrings.location,
+                        value: product.manufacturingLocation,
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-          _InfoRow(
-            label: 'Production Days',
-            value: product.standardProductionDays.toString(),
-          ),
-          if (product.manufacturingLocation.isNotEmpty)
-            _InfoRow(label: 'Location', value: product.manufacturingLocation),
           VerticalSpace(80),
         ],
       ),
@@ -237,33 +360,6 @@ class _ProductContent extends StatelessWidget {
     if (prices.isEmpty) return null;
     prices.sort();
     return prices.first;
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Text('$label: ', style: TextStyles.text14400),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyles.text14400.copyWith(
-                color: Theme.of(context).colorScheme.secondaryText,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -288,6 +384,160 @@ class _CartBadgeIcon extends StatelessWidget {
       ),
       child: icon,
     );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(title, style: TextStyles.text17500);
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+
+  const _InfoChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(label, style: TextStyles.text14400),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  final String label;
+
+  const _TagChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(label, style: TextStyles.text14400),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const _InfoTile({required this.title, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyles.text14400.copyWith(
+              color: Theme.of(context).colorScheme.secondaryText,
+            ),
+          ),
+          VerticalSpace(6),
+          Text(value, style: TextStyles.text14400),
+        ],
+      ),
+    );
+  }
+}
+
+class _VariantCard extends StatelessWidget {
+  final VariantEntity variant;
+
+  const _VariantCard({required this.variant});
+
+  @override
+  Widget build(BuildContext context) {
+    final sizeLabel = variant.sizeType?.sizeName ?? variant.sizeType?.sizeCode;
+    final stockLabel = 'Stock: ${variant.inventoryAvailable}';
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: _parseColor(context, variant.colorCode),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              HorizontalSpace(8),
+              Expanded(
+                child: Text(
+                  sizeLabel == null
+                      ? variant.colorName
+                      : '${variant.colorName} • $sizeLabel',
+                  style: TextStyles.text14400,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                '\$${variant.basePrice.toStringAsFixed(0)}',
+                style: TextStyles.text14400.copyWith(
+                  color: Theme.of(context).colorScheme.secondaryText,
+                ),
+              ),
+            ],
+          ),
+          VerticalSpace(6),
+          Text(
+            stockLabel,
+            style: TextStyles.text14400.copyWith(
+              color: Theme.of(context).colorScheme.secondaryText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _parseColor(BuildContext context, String hex) {
+    final cleaned = hex.replaceAll('#', '').trim();
+    if (cleaned.length == 6 || cleaned.length == 8) {
+      final value = cleaned.length == 6 ? 'FF$cleaned' : cleaned.toUpperCase();
+      final color = int.tryParse(value, radix: 16);
+      if (color != null) {
+        return Color(color);
+      }
+    }
+    return Theme.of(context).colorScheme.primary;
   }
 }
 
@@ -323,10 +573,7 @@ class _QuantityPicker extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 alignment: Alignment.center,
-                child: Text(
-                  quantity.toString(),
-                  style: TextStyles.text14400,
-                ),
+                child: Text(quantity.toString(), style: TextStyles.text14400),
               ),
               IconButton(
                 onPressed: onIncrease,
@@ -335,6 +582,38 @@ class _QuantityPicker extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PersonalizationToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _PersonalizationToggle({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(!value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(AppStrings.hasPersonalization, style: TextStyles.text14400),
+              Checkbox(
+                value: value,
+                onChanged: (updated) => onChanged(updated ?? false),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

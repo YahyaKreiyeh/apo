@@ -5,6 +5,7 @@ import 'package:apo/core/constants/theme_constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
 import 'package:apo/core/models/result.dart';
 import 'package:apo/core/routing/route_names.dart';
+import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/utilities/device_utility.dart';
@@ -303,9 +304,14 @@ class _ProductCard extends StatelessWidget {
               Positioned(
                 top: 0,
                 right: 0,
-                child: IconButton(
-                  onPressed: null,
+                child: IconButton.filled(
+                  onPressed: () {},
                   icon: Icon(Icons.favorite_outline),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.secondaryContainer.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -316,7 +322,7 @@ class _ProductCard extends StatelessWidget {
             Text(
               '\$${price!.toStringAsFixed(0)}',
               style: TextStyles.text14400.copyWith(
-                color: Theme.of(context).colorScheme.secondaryText,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
         ],
