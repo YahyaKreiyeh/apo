@@ -13,9 +13,12 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     bool hasPersonalization = false,
   }) {
     final safeQuantity = quantity < 1 ? 1 : quantity;
+    final variantId =
+        product.variants.isNotEmpty ? product.variants.first.variantId : 0;
     final existingIndex = state.items.indexWhere(
       (item) =>
           item.productId == product.productId &&
+          item.variantId == variantId &&
           item.hasPersonalization == hasPersonalization,
     );
     final imageUrl = product.images.isNotEmpty
@@ -30,6 +33,7 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
         ...state.items,
         CartItemEntity(
           productId: product.productId,
+          variantId: variantId,
           name: product.productName,
           productSku: product.productSKU,
           unitPrice: unitPrice,
@@ -60,13 +64,14 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     );
   }
 
-  void removeItem(int productId, bool hasPersonalization) {
+  void removeItem(int productId, int variantId, bool hasPersonalization) {
     safeEmit(
       state.copyWith(
         items: state.items
             .where(
               (item) =>
                   item.productId != productId ||
+                  item.variantId != variantId ||
                   item.hasPersonalization != hasPersonalization,
             )
             .toList(),
@@ -74,11 +79,17 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     );
   }
 
-  void updateQuantity(int productId, bool hasPersonalization, int quantity) {
+  void updateQuantity(
+    int productId,
+    int variantId,
+    bool hasPersonalization,
+    int quantity,
+  ) {
     final safeQuantity = quantity < 1 ? 1 : quantity;
     final index = state.items.indexWhere(
       (item) =>
           item.productId == productId &&
+          item.variantId == variantId &&
           item.hasPersonalization == hasPersonalization,
     );
     if (index == -1) {

@@ -5,6 +5,7 @@ enum RouteNames {
   orders('orders', '/orders'),
   profile('profile', '/profile'),
   product('product', '/product/:id'),
+  requestQuote('requestQuote', '/request-quote'),
 
   // Authentication
   login('login', '/login'),

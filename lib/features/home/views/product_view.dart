@@ -31,6 +31,35 @@ class ProductView extends StatelessWidget {
       builder: (context, state) {
         final product = state.status.successValue;
         return Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            actionsPadding: EdgeInsets.only(right: 8),
+            actions: [
+              IconButton.filled(
+                onPressed: () {},
+                icon: Icon(Icons.favorite_outline),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.secondaryContainer.withValues(
+                    alpha: 0.5,
+                  ),
+                ),
+              ),
+              BlocBuilder<CartCubit, CartState>(
+                builder: (context, cartState) {
+                  return IconButton.filled(
+                    onPressed: () => context.goNamed(RouteNames.cart.name),
+                    icon: _CartBadgeIcon(count: cartState.totalItems),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.secondaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
           bottomNavigationBar: SafeArea(
             minimum: const EdgeInsets.all(Constants.defaultPadding),
             child: Column(
@@ -189,57 +218,13 @@ class _ProductContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  height: DeviceUtility.getScreenWidth(context) * 0.8,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (_, _) => ShimmerPlaceholder(),
-                  errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: Constants.defaultPadding),
-                child: Row(
-                  children: [
-                    IconButton.filled(
-                      onPressed: () => context.pop(),
-                      icon: Icon(Icons.arrow_back),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.secondaryContainer
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton.filled(
-                      onPressed: () {},
-                      icon: Icon(Icons.favorite_outline),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.secondaryContainer
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    BlocBuilder<CartCubit, CartState>(
-                      builder: (context, cartState) {
-                        return IconButton.filled(
-                          onPressed: () =>
-                              context.goNamed(RouteNames.cart.name),
-                          icon: _CartBadgeIcon(count: cartState.totalItems),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.secondaryContainer
-                                .withValues(alpha: 0.5),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          CachedNetworkImage(
+            imageUrl: imageUrl,
+            height: DeviceUtility.getScreenWidth(context) * 0.8,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            placeholder: (_, _) => ShimmerPlaceholder(),
+            errorWidget: (_, _, _) => NetworkImagePlaceholder(),
           ),
           VerticalSpace(16),
           Text(product.productName, style: TextStyles.text17500),

@@ -1,6 +1,7 @@
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
@@ -10,6 +11,7 @@ import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class CartView extends StatelessWidget {
   const CartView({super.key});
@@ -18,6 +20,31 @@ class CartView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(AppStrings.cart)),
+      bottomNavigationBar: BlocBuilder<CartCubit, CartState>(
+        builder: (context, state) {
+          if (state.items.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return SafeArea(
+            minimum: const EdgeInsets.all(Constants.defaultPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton(
+                  onPressed: () => context.goNamed(RouteNames.home.name),
+                  child: Text(AppStrings.continueShopping),
+                ),
+                VerticalSpace(12),
+                ElevatedButton(
+                  onPressed: () =>
+                      context.pushNamed(RouteNames.requestQuote.name),
+                  child: Text(AppStrings.requestQuote),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
       body: BlocBuilder<CartCubit, CartState>(
         builder: (context, state) {
           if (state.items.isEmpty) {
@@ -32,7 +59,9 @@ class CartView extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = state.items[index];
               return Dismissible(
-                key: ValueKey('${item.productId}-${item.hasPersonalization}'),
+                key: ValueKey(
+                  '${item.productId}-${item.variantId}-${item.hasPersonalization}',
+                ),
                 background: _DismissBackground(
                   alignment: Alignment.centerLeft,
                   icon: Icons.delete_outline,
@@ -43,6 +72,7 @@ class CartView extends StatelessWidget {
                 ),
                 onDismissed: (_) => context.read<CartCubit>().removeItem(
                   item.productId,
+                  item.variantId,
                   item.hasPersonalization,
                 ),
                 child: Container(
@@ -133,6 +163,7 @@ class CartView extends StatelessWidget {
                                 ? () =>
                                       context.read<CartCubit>().updateQuantity(
                                         item.productId,
+                                        item.variantId,
                                         item.hasPersonalization,
                                         item.quantity - 1,
                                       )
@@ -140,6 +171,7 @@ class CartView extends StatelessWidget {
                             onIncrease: () =>
                                 context.read<CartCubit>().updateQuantity(
                                   item.productId,
+                                  item.variantId,
                                   item.hasPersonalization,
                                   item.quantity + 1,
                                 ),

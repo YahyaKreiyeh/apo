@@ -36,4 +36,11 @@ class Validators {
     }
     return null;
   }
+
+  static String? required(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppStrings.requiredField;
+    }
+    return null;
+  }
 }

@@ -12,6 +12,11 @@ import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
+import 'package:apo/features/quote_request/data/repositories/quote_requests_repository_impl.dart';
+import 'package:apo/features/quote_request/data/services/quote_requests_api_service.dart';
+import 'package:apo/features/quote_request/domain/repositories/quote_requests_repository.dart';
+import 'package:apo/features/quote_request/domain/usecases/submit_quote_request_usecase.dart';
+import 'package:apo/features/quote_request/presentation/cubits/quote_request_cubit.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -37,6 +42,9 @@ Future<void> setupGetIt() async {
       productId: productId,
     ),
   );
+  getIt.registerFactory(
+    () => QuoteRequestCubit(getIt<SubmitQuoteRequestUseCase>()),
+  );
 
   getIt.registerLazySingleton<LoginUseCase>(
     () => LoginUseCase(getIt<AuthenticationRepository>()),
@@ -47,12 +55,21 @@ Future<void> setupGetIt() async {
   getIt.registerLazySingleton<GetProductDetailsUseCase>(
     () => GetProductDetailsUseCase(getIt<ProductsRepository>()),
   );
+  getIt.registerLazySingleton<SubmitQuoteRequestUseCase>(
+    () => SubmitQuoteRequestUseCase(getIt<QuoteRequestsRepository>()),
+  );
 
   getIt.registerLazySingleton<AuthenticationRepository>(
     () => AuthenticationRepositoryImpl(getIt<AuthenticationApiService>()),
   );
   getIt.registerLazySingleton<ProductsRepository>(
     () => ProductsRepositoryImpl(getIt<ProductsApiService>()),
+  );
+  getIt.registerLazySingleton<QuoteRequestsApiService>(
+    () => QuoteRequestsApiService(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<QuoteRequestsRepository>(
+    () => QuoteRequestsRepositoryImpl(getIt<QuoteRequestsApiService>()),
   );
 
   getIt.registerLazySingleton<AuthenticationApiService>(

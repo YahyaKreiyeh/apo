@@ -11,6 +11,8 @@ import 'package:apo/features/home/views/home_view.dart';
 import 'package:apo/features/home/views/orders_view.dart';
 import 'package:apo/features/home/views/product_view.dart';
 import 'package:apo/features/home/views/profile_view.dart';
+import 'package:apo/features/quote_request/presentation/cubits/quote_request_cubit.dart';
+import 'package:apo/features/quote_request/views/request_quote_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -134,6 +136,14 @@ final _bottomNavRoutes = [
 ];
 
 final _appRoutes = [
+  GoRoute(
+    path: RouteNames.requestQuote.path,
+    name: RouteNames.requestQuote.name,
+    builder: (context, state) => BlocProvider(
+      create: (context) => getIt<QuoteRequestCubit>(),
+      child: RequestQuoteView(),
+    ),
+  ),
   GoRoute(
     path: RouteNames.product.path,
     name: RouteNames.product.name,

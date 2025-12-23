@@ -63,12 +63,6 @@ class _HomeViewState extends State<HomeView> {
           icon: Icon(Icons.menu_outlined),
         ),
         actionsPadding: EdgeInsets.only(right: 8),
-        actions: [
-          IconButton.filled(
-            onPressed: () {},
-            icon: Icon(Icons.shopping_bag_outlined),
-          ),
-        ],
       ),
       body: CustomScrollView(
         controller: _scrollController,
