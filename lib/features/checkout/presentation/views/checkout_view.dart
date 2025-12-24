@@ -1,18 +1,21 @@
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/models/api_response_model.dart' hide Failure;
 import 'package:apo/core/models/result.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/utilities/validators.dart';
 import 'package:apo/core/widgets/app_toast.dart';
 import 'package:apo/features/checkout/checkout_type.dart';
+import 'package:apo/features/checkout/domain/models/create_transfer_parameters.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_cubit.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_state.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView({super.key});
@@ -23,9 +26,388 @@ class CheckoutView extends StatefulWidget {
 
 class _CheckoutViewState extends State<CheckoutView> {
   final _formKey = GlobalKey<FormState>();
-  DateTime? _requestedShipDate;
-  bool _mustShipByRequestedDate = false;
-  final List<String> _selectedTransfers = [];
+
+  Future<void> _showTransferDialog(CheckoutCubit cubit) async {
+    if (!mounted) return;
+    if (cubit.state.transferOptions.isEmpty &&
+        !cubit.state.transfersStatus.isLoading) {
+      await cubit.fetchTransferSelections();
+    }
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
+        return BlocProvider.value(
+          value: cubit,
+          child: BlocBuilder<CheckoutCubit, CheckoutState>(
+            builder: (context, state) {
+              final transferContent = switch (state.transfersStatus) {
+                Loading() => Row(
+                  children: [
+                    const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    HorizontalSpace(12),
+                    Expanded(
+                      child: Text(
+                        AppStrings.loadingTransfers,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.secondaryText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Failure() => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      state.transfersStatus.failureMessage,
+                      style: TextStyles.text14400.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    VerticalSpace(8),
+                    TextButton.icon(
+                      onPressed: cubit.fetchTransferSelections,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(AppStrings.retry),
+                    ),
+                  ],
+                ),
+                _ =>
+                  state.transferOptions.isEmpty
+                      ? Text(
+                          AppStrings.noTransfersAvailable,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        )
+                      : SizedBox(
+                          width: double.maxFinite,
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              final transfer = state.transferOptions[index];
+                              final isSelected = state.selectedTransferIds
+                                  .contains(transfer.transferId);
+                              return CheckboxListTile(
+                                value: isSelected,
+                                onChanged: (_) => cubit.toggleTransferSelection(
+                                  transfer.transferId,
+                                ),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                title: Text(
+                                  transfer.transferName,
+                                  style: TextStyles.text14400.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${transfer.transferCode} • ${transfer.transferType}',
+                                  style: TextStyles.text14400.copyWith(
+                                    color: colorScheme.secondaryText,
+                                  ),
+                                ),
+                              );
+                            },
+                            separatorBuilder: (_, _) => VerticalSpace(8),
+                            itemCount: state.transferOptions.length,
+                          ),
+                        ),
+              };
+              return AlertDialog(
+                title: Text(AppStrings.transferSelection),
+                content: transferContent,
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => context.pop(),
+                    child: Text(AppStrings.done),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showCreateTransferDialog(CheckoutCubit cubit) async {
+    if (!mounted) return;
+    final formKey = GlobalKey<FormState>();
+    if (cubit.state.transferTypeOptions.isEmpty &&
+        !cubit.state.transferTypeStatus.isLoading) {
+      await cubit.fetchTransferTypeOptions();
+    }
+    if (cubit.state.sheetTypeOptions.isEmpty &&
+        !cubit.state.sheetTypeStatus.isLoading) {
+      await cubit.fetchSheetTypeOptions();
+    }
+    if (!mounted) return;
+    var transferCode = '';
+    var transferName = '';
+    var transferDescription = '';
+    var thumbnailUrl = '';
+    var artworkUrl = '';
+    var artworkThumbnailUrl = '';
+    var designFileUrl = '';
+    int? transferTypeId;
+    int? defaultSheetTypeId;
+    var isSubmitting = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
+        return BlocProvider.value(
+          value: cubit,
+          child: BlocBuilder<CheckoutCubit, CheckoutState>(
+            builder: (context, state) {
+              return StatefulBuilder(
+                builder: (context, setDialogState) {
+                  Future<void> handleSubmit() async {
+                    if (!formKey.currentState!.validate()) return;
+                    if (transferTypeId == null || defaultSheetTypeId == null) {
+                      AppToast.show(message: AppStrings.requiredField);
+                      return;
+                    }
+                    setDialogState(() => isSubmitting = true);
+                    final parameters = CreateTransferParameters(
+                      transferCode: transferCode.trim(),
+                      transferName: transferName.trim(),
+                      description: transferDescription.trim(),
+                      thumbnailUrl: thumbnailUrl.trim(),
+                      designFileUrl: designFileUrl.trim(),
+                      artworkUrl: artworkUrl.trim(),
+                      artworkThumbnailUrl: artworkThumbnailUrl.trim(),
+                      transferTypeId: transferTypeId ?? 0,
+                      defaultSheetTypeId: defaultSheetTypeId ?? 0,
+                    );
+                    final response = await cubit.createTransfer(parameters);
+                    response.when(
+                      success: (_) {
+                        Navigator.of(dialogContext).pop();
+                        cubit.fetchTransferSelections();
+                      },
+                      failure: (error) {
+                        AppToast.show(message: error.messageOrDefault);
+                        setDialogState(() => isSubmitting = false);
+                      },
+                    );
+                  }
+
+                  return AlertDialog(
+                    title: Text(AppStrings.createNewTransferTitle),
+                    content: SingleChildScrollView(
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.createNewTransferSubtitle,
+                              style: TextStyles.text14400.copyWith(
+                                color: colorScheme.secondaryText,
+                              ),
+                            ),
+                            VerticalSpace(16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _LabeledField(
+                                    label: AppStrings.transferCodeLabel,
+                                    hintText: AppStrings.transferCodeHint,
+                                    validator: Validators.required,
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) => transferCode = value,
+                                  ),
+                                ),
+                                HorizontalSpace(12),
+                                Expanded(
+                                  child: _LabeledField(
+                                    label: AppStrings.transferNameLabel,
+                                    hintText: AppStrings.transferNameHint,
+                                    validator: Validators.required,
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) => transferName = value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            VerticalSpace(12),
+                            _LabeledField(
+                              label: AppStrings.transferDescriptionLabel,
+                              hintText: AppStrings.transferDescriptionHint,
+                              validator: Validators.required,
+                              maxLines: 3,
+                              textInputAction: TextInputAction.newline,
+                              onChanged: (value) => transferDescription = value,
+                            ),
+                            VerticalSpace(12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _LabeledField(
+                                    label: AppStrings.transferThumbnailUrlLabel,
+                                    hintText: 'https://example.com',
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) => thumbnailUrl = value,
+                                  ),
+                                ),
+                                HorizontalSpace(12),
+                                Expanded(
+                                  child: _LabeledField(
+                                    label: AppStrings.transferArtworkUrlLabel,
+                                    hintText: 'https://example.com',
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) => artworkUrl = value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            VerticalSpace(12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _LabeledField(
+                                    label: AppStrings
+                                        .transferArtworkThumbnailUrlLabel,
+                                    hintText: 'https://example.com',
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) =>
+                                        artworkThumbnailUrl = value,
+                                  ),
+                                ),
+                                HorizontalSpace(12),
+                                Expanded(
+                                  child: _LabeledField(
+                                    label:
+                                        AppStrings.transferDesignFileUrlLabel,
+                                    hintText: 'https://example.com',
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value) => designFileUrl = value,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            VerticalSpace(12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _LabeledDropdown<int>(
+                                    label: AppStrings.transferTypeIdLabel,
+                                    hintText: AppStrings.transferTypeIdHint,
+                                    value: transferTypeId,
+                                    items: state.transferTypeOptions
+                                        .map(
+                                          (option) => DropdownMenuItem<int>(
+                                            value: option.id,
+                                            child: Text(
+                                              option.detailName,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged:
+                                        state.transferTypeStatus.isLoading
+                                        ? null
+                                        : (value) => setDialogState(
+                                            () => transferTypeId = value,
+                                          ),
+                                  ),
+                                ),
+                                HorizontalSpace(12),
+                                Expanded(
+                                  child: _LabeledDropdown<int>(
+                                    label: AppStrings.defaultSheetTypeIdLabel,
+                                    hintText: AppStrings.defaultSheetTypeIdHint,
+                                    value: defaultSheetTypeId,
+                                    items: state.sheetTypeOptions
+                                        .map(
+                                          (option) => DropdownMenuItem<int>(
+                                            value: option.id,
+                                            child: Text(
+                                              option.detailName,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: state.sheetTypeStatus.isLoading
+                                        ? null
+                                        : (value) => setDialogState(
+                                            () => defaultSheetTypeId = value,
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (state.transferTypeStatus.isFailure)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  state.transferTypeStatus.failureMessage,
+                                  style: TextStyles.text14400.copyWith(
+                                    color: colorScheme.error,
+                                  ),
+                                ),
+                              ),
+                            if (state.sheetTypeStatus.isFailure)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  state.sheetTypeStatus.failureMessage,
+                                  style: TextStyles.text14400.copyWith(
+                                    color: colorScheme.error,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () => Navigator.of(dialogContext).pop(),
+                              child: Text(AppStrings.cancel),
+                            ),
+                          ),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isSubmitting ? null : handleSubmit,
+                              child: isSubmitting
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(AppStrings.save),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _pickShipDate(
     ValueChanged<DateTime?> onDateSelected,
@@ -76,6 +458,11 @@ class _CheckoutViewState extends State<CheckoutView> {
     final isSubmitting = state.status.isLoading;
     final cubit = context.read<CheckoutCubit>();
     final type = state.type;
+    final selectedTransfers = state.transferOptions
+        .where(
+          (transfer) => state.selectedTransferIds.contains(transfer.transferId),
+        )
+        .toList();
     return Scaffold(
       appBar: AppBar(title: Text(type.title)),
       bottomNavigationBar: SafeArea(
@@ -350,15 +737,21 @@ class _CheckoutViewState extends State<CheckoutView> {
                 _LabeledField(
                   label: AppStrings.jobDescription,
                   hintText: AppStrings.jobDescriptionHint,
+                  initialValue: state.jobDescription,
                   maxLines: 2,
                   textInputAction: TextInputAction.newline,
+                  onChanged: (value) =>
+                      cubit.updateJobInformation(description: value),
                 ),
                 VerticalSpace(12),
                 _LabeledField(
                   label: AppStrings.jobComment,
                   hintText: AppStrings.jobCommentHint,
+                  initialValue: state.jobComment,
                   maxLines: 2,
                   textInputAction: TextInputAction.newline,
+                  onChanged: (value) =>
+                      cubit.updateJobInformation(comment: value),
                 ),
                 VerticalSpace(20),
                 _SectionTitle(title: AppStrings.shippingInformation),
@@ -391,15 +784,15 @@ class _CheckoutViewState extends State<CheckoutView> {
                     Expanded(
                       child: _LabeledField(
                         key: ValueKey(
-                          _requestedShipDate?.toIso8601String() ?? '',
+                          state.requestedShipDate?.toIso8601String() ?? '',
                         ),
                         label: AppStrings.requestedShipDate,
                         hintText: AppStrings.requestedShipDateHint,
-                        initialValue: _formatDate(_requestedShipDate),
+                        initialValue: _formatDate(state.requestedShipDate),
                         readOnly: true,
                         onTap: () => _pickShipDate(
-                          (date) => setState(() => _requestedShipDate = date),
-                          _requestedShipDate,
+                          cubit.setRequestedShipDate,
+                          state.requestedShipDate,
                         ),
                         suffixIcon: const Icon(Icons.calendar_today_outlined),
                       ),
@@ -410,17 +803,18 @@ class _CheckoutViewState extends State<CheckoutView> {
                 _LabeledField(
                   label: AppStrings.shippingInstructions,
                   hintText: AppStrings.shippingInstructionsHint,
+                  initialValue: state.shippingInstructions,
                   maxLines: 2,
                   textInputAction: TextInputAction.newline,
+                  onChanged: cubit.updateShippingInstructions,
                 ),
                 VerticalSpace(4),
                 Row(
                   children: [
                     Checkbox(
-                      value: _mustShipByRequestedDate,
-                      onChanged: (value) => setState(
-                        () => _mustShipByRequestedDate = value ?? false,
-                      ),
+                      value: state.mustShipByRequestedDate,
+                      onChanged: (value) =>
+                          cubit.setMustShipByRequestedDate(value ?? false),
                     ),
                     Expanded(
                       child: Text(
@@ -439,7 +833,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () => _showTransferDialog(cubit),
                         icon: const Icon(Icons.search),
                         label: Text(AppStrings.addExistingTransfer),
                       ),
@@ -447,7 +841,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                     HorizontalSpace(12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () => _showCreateTransferDialog(cubit),
                         icon: const Icon(Icons.add),
                         label: Text(AppStrings.createNewTransfer),
                       ),
@@ -462,14 +856,48 @@ class _CheckoutViewState extends State<CheckoutView> {
                   ),
                 ),
                 VerticalSpace(6),
-                Text(
-                  _selectedTransfers.isEmpty
-                      ? AppStrings.noTransfersSelected
-                      : _selectedTransfers.join(', '),
-                  style: TextStyles.text14400.copyWith(
-                    color: colorScheme.secondaryText,
+                if (selectedTransfers.isEmpty)
+                  Text(
+                    AppStrings.noTransfersSelected,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      final transfer = selectedTransfers[index];
+                      return Material(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        child: ListTile(
+                          title: Text(
+                            transfer.transferName,
+                            style: TextStyles.text14400.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${transfer.transferCode} • ${transfer.transferType}',
+                            style: TextStyles.text14400.copyWith(
+                              color: colorScheme.secondaryText,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            color: colorScheme.error,
+                            onPressed: () => cubit.toggleTransferSelection(
+                              transfer.transferId,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, _) => VerticalSpace(8),
+                    itemCount: selectedTransfers.length,
                   ),
-                ),
               ],
               VerticalSpace(24),
             ],

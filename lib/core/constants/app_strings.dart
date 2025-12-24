@@ -42,6 +42,7 @@ class AppStrings {
   static const String lastName = 'Last Name';
   static const String email = 'Email';
   static const String phone = 'Phone';
+  static const String done = 'Done';
   static const String firstNameHint = 'John';
   static const String lastNameHint = 'Doe';
   static const String emailHint = 'john@company.com';
@@ -90,6 +91,28 @@ class AppStrings {
   static const String createNewTransfer = 'Create New Transfer';
   static const String selectedTransfers = 'Selected Transfers';
   static const String noTransfersSelected = 'No transfers selected';
+  static const String noTransfersAvailable = 'No transfers available';
+  static const String loadingTransfers = 'Loading transfers...';
+  static const String createNewTransferTitle = 'Create New Transfer';
+  static const String createNewTransferSubtitle =
+      'Add a new transfer to the catalog that can be used in jobs.';
+  static const String transferCodeLabel = 'Transfer Code *';
+  static const String transferCodeHint = 'e.g., T001';
+  static const String transferNameLabel = 'Transfer Name *';
+  static const String transferNameHint = 'e.g., Eagle Design';
+  static const String transferDescriptionLabel = 'Description *';
+  static const String transferDescriptionHint = 'Describe the transfer design';
+  static const String transferThumbnailUrlLabel = 'Thumbnail URL';
+  static const String transferArtworkUrlLabel = 'Artwork URL';
+  static const String transferArtworkThumbnailUrlLabel =
+      'Artwork Thumbnail URL';
+  static const String transferDesignFileUrlLabel = 'Design File URL';
+  static const String transferTypeIdLabel = 'Transfer Type *';
+  static const String transferTypeIdHint = 'Select transfer type';
+  static const String defaultSheetTypeIdLabel = 'Default Sheet Type *';
+  static const String defaultSheetTypeIdHint = 'Select sheet type';
+  static const String createTransfer = 'Create Transfer';
+  static const String save = 'Save';
   static const String submitQuoteRequest = 'Submit Quote Request';
   static const String cancel = 'Cancel';
   static const String requiredField = 'This field is required';

@@ -6,6 +6,7 @@ import 'package:apo/core/helpers/secure_storage_helper.dart';
 import 'package:apo/core/models/api_response_model.dart';
 import 'package:apo/core/networking/api_error_handler.dart';
 import 'package:apo/core/networking/api_error_model.dart';
+import 'package:apo/core/networking/dio_factory.dart';
 import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/core/routing/routes.dart';
 import 'package:dio/dio.dart';
@@ -93,6 +94,7 @@ abstract class BaseRepository {
   }
 
   static Future<void> clearSession() async {
+    DioFactory.setAuthToken(null);
     await PreferencesHelper.clear();
     await SecureStorageHelper.clear();
     navigatorKey.currentContext?.goNamed(RouteNames.home.name);

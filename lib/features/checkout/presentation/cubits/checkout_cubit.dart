@@ -3,7 +3,13 @@ import 'package:apo/core/models/api_response_model.dart';
 import 'package:apo/core/models/result.dart';
 import 'package:apo/features/checkout/checkout_type.dart';
 import 'package:apo/features/checkout/domain/models/quote_request_parameters.dart';
+import 'package:apo/features/checkout/domain/models/create_transfer_parameters.dart';
+import 'package:apo/features/checkout/domain/models/job_checkout_parameters.dart';
+import 'package:apo/features/checkout/domain/usecases/create_transfer_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_sheet_type_options_usecase.dart';
 import 'package:apo/features/checkout/domain/usecases/get_ship_via_options_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_transfer_type_options_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_transfer_selections_usecase.dart';
 import 'package:apo/features/checkout/domain/usecases/request_quote_usecase.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_state.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
@@ -16,16 +22,31 @@ class CheckoutCubit extends Cubit<CheckoutState>
     this._requestQuoteUseCase,
     this._checkoutUseCase,
     this._getShipViaOptionsUseCase, {
+    required GetTransferSelectionsUseCase getTransferSelectionsUseCase,
+    required CreateTransferUseCase createTransferUseCase,
+    required GetTransferTypeOptionsUseCase getTransferTypeOptionsUseCase,
+    required GetSheetTypeOptionsUseCase getSheetTypeOptionsUseCase,
     required CheckoutType type,
-  }) : super(CheckoutState(type: type)) {
+  }) : _getTransferSelectionsUseCase = getTransferSelectionsUseCase,
+       _createTransferUseCase = createTransferUseCase,
+       _getTransferTypeOptionsUseCase = getTransferTypeOptionsUseCase,
+       _getSheetTypeOptionsUseCase = getSheetTypeOptionsUseCase,
+       super(CheckoutState(type: type)) {
     if (type == CheckoutType.checkout) {
-      Future.microtask(fetchShipViaOptions);
+      Future.microtask(() async {
+        await fetchShipViaOptions();
+        await fetchTransferSelections();
+      });
     }
   }
 
   final RequestQuoteUseCase _requestQuoteUseCase;
   final CheckoutUseCase _checkoutUseCase;
   final GetShipViaOptionsUseCase _getShipViaOptionsUseCase;
+  final GetTransferSelectionsUseCase _getTransferSelectionsUseCase;
+  final CreateTransferUseCase _createTransferUseCase;
+  final GetTransferTypeOptionsUseCase _getTransferTypeOptionsUseCase;
+  final GetSheetTypeOptionsUseCase _getSheetTypeOptionsUseCase;
 
   void updateContact({
     String? firstName,
@@ -95,6 +116,27 @@ class CheckoutCubit extends Cubit<CheckoutState>
     );
   }
 
+  void updateJobInformation({String? description, String? comment}) {
+    safeEmit(
+      state.copyWith(
+        jobDescription: description ?? state.jobDescription,
+        jobComment: comment ?? state.jobComment,
+      ),
+    );
+  }
+
+  void updateShippingInstructions(String instructions) {
+    safeEmit(state.copyWith(shippingInstructions: instructions));
+  }
+
+  void setRequestedShipDate(DateTime? date) {
+    safeEmit(state.copyWith(requestedShipDate: date));
+  }
+
+  void setMustShipByRequestedDate(bool value) {
+    safeEmit(state.copyWith(mustShipByRequestedDate: value));
+  }
+
   void setDesiredShipDate(DateTime? date) {
     safeEmit(state.copyWith(desiredShipDate: date));
   }
@@ -122,11 +164,88 @@ class CheckoutCubit extends Cubit<CheckoutState>
     safeEmit(state.copyWith(selectedShipViaCode: code));
   }
 
+  Future<void> fetchTransferSelections() async {
+    if (state.transfersStatus.isLoading) return;
+    safeEmit(state.copyWith(transfersStatus: const Result.loading()));
+    final response = await _getTransferSelectionsUseCase();
+    response.when(
+      success: (data) {
+        safeEmit(
+          state.copyWith(
+            transfersStatus: Result.success(data: data),
+            transferOptions: data,
+          ),
+        );
+      },
+      failure: (error) {
+        safeEmit(state.copyWith(transfersStatus: Result.failure(error: error)));
+      },
+    );
+  }
+
+  Future<void> fetchTransferTypeOptions() async {
+    if (state.transferTypeStatus.isLoading) return;
+    safeEmit(state.copyWith(transferTypeStatus: const Result.loading()));
+    final response = await _getTransferTypeOptionsUseCase();
+    response.when(
+      success: (data) {
+        safeEmit(
+          state.copyWith(
+            transferTypeStatus: Result.success(data: data),
+            transferTypeOptions: data,
+          ),
+        );
+      },
+      failure: (error) {
+        safeEmit(state.copyWith(transferTypeStatus: Result.failure(error: error)));
+      },
+    );
+  }
+
+  Future<void> fetchSheetTypeOptions() async {
+    if (state.sheetTypeStatus.isLoading) return;
+    safeEmit(state.copyWith(sheetTypeStatus: const Result.loading()));
+    final response = await _getSheetTypeOptionsUseCase();
+    response.when(
+      success: (data) {
+        safeEmit(
+          state.copyWith(
+            sheetTypeStatus: Result.success(data: data),
+            sheetTypeOptions: data,
+          ),
+        );
+      },
+      failure: (error) {
+        safeEmit(state.copyWith(sheetTypeStatus: Result.failure(error: error)));
+      },
+    );
+  }
+
+  void toggleTransferSelection(int transferId) {
+    final selected = List<int>.from(state.selectedTransferIds);
+    if (selected.contains(transferId)) {
+      selected.remove(transferId);
+    } else {
+      selected.add(transferId);
+    }
+    safeEmit(state.copyWith(selectedTransferIds: selected));
+  }
+
+  Future<ApiResponseModel<void>> createTransfer(
+    CreateTransferParameters parameters,
+  ) {
+    return _createTransferUseCase(parameters);
+  }
+
   Future<void> submit({required List<CartItemEntity> items}) async {
     if (state.status.isLoading) return;
     safeEmit(state.copyWith(status: const Result.loading()));
-    final parameters = _buildParameters(items);
-    final response = await _submitForType(parameters);
+    final response = switch (state.type) {
+      CheckoutType.requestQuote => await _requestQuoteUseCase(
+        _buildQuoteParameters(items),
+      ),
+      CheckoutType.checkout => await _checkoutUseCase(_buildJobParameters()),
+    };
     response.when(
       success: (_) {
         safeEmit(state.copyWith(status: const Result.success(data: null)));
@@ -137,7 +256,7 @@ class CheckoutCubit extends Cubit<CheckoutState>
     );
   }
 
-  QuoteRequestParameters _buildParameters(List<CartItemEntity> items) {
+  QuoteRequestParameters _buildQuoteParameters(List<CartItemEntity> items) {
     final shipDate = state.desiredShipDate ?? DateTime.now().toUtc();
     return QuoteRequestParameters(
       firstName: state.firstName.trim(),
@@ -169,14 +288,32 @@ class CheckoutCubit extends Cubit<CheckoutState>
     );
   }
 
-  Future<ApiResponseModel<void>> _submitForType(
-    QuoteRequestParameters parameters,
-  ) {
-    switch (state.type) {
-      case CheckoutType.requestQuote:
-        return _requestQuoteUseCase(parameters);
-      case CheckoutType.checkout:
-        return _checkoutUseCase(parameters);
-    }
+  JobCheckoutParameters _buildJobParameters() {
+    return JobCheckoutParameters(
+      shippingAddress: JobCheckoutAddressParameters(
+        addressLine1: state.shipLine1.trim(),
+        addressLine2: state.shipLine2.trim(),
+        city: state.shipCity.trim(),
+        state: state.shipState.trim(),
+        country: '',
+        zipCode: state.shipZip.trim(),
+      ),
+      billingAddress: JobCheckoutAddressParameters(
+        addressLine1: state.billLine1.trim(),
+        addressLine2: state.billLine2.trim(),
+        city: state.billCity.trim(),
+        state: state.billState.trim(),
+        country: '',
+        zipCode: state.billZip.trim(),
+      ),
+      customerNotes: state.customerNotes.trim(),
+      jobDescription: state.jobDescription.trim(),
+      jobComment: state.jobComment.trim(),
+      transferIds: List<int>.from(state.selectedTransferIds),
+      shipViaCode: state.selectedShipViaCode ?? '',
+      shippingInstructions: state.shippingInstructions.trim(),
+      requestedShipDate: state.requestedShipDate,
+      mustShipByDate: state.mustShipByRequestedDate,
+    );
   }
 }

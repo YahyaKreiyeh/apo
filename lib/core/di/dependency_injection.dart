@@ -1,3 +1,5 @@
+import 'package:apo/core/constants/secure_storage_keys.dart';
+import 'package:apo/core/extensions/null_or_empty_extensions.dart';
 import 'package:apo/core/networking/dio_factory.dart';
 import 'package:apo/features/authentication/data/repositories/authentication_repository_impl.dart';
 import 'package:apo/features/authentication/data/services/authentication_api_service.dart';
@@ -8,7 +10,11 @@ import 'package:apo/features/checkout/checkout_type.dart';
 import 'package:apo/features/checkout/data/repositories/checkout_repository_impl.dart';
 import 'package:apo/features/checkout/data/services/checkout_api_service.dart';
 import 'package:apo/features/checkout/domain/repositories/checkout_repository.dart';
+import 'package:apo/features/checkout/domain/usecases/create_transfer_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_sheet_type_options_usecase.dart';
 import 'package:apo/features/checkout/domain/usecases/get_ship_via_options_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_transfer_type_options_usecase.dart';
+import 'package:apo/features/checkout/domain/usecases/get_transfer_selections_usecase.dart';
 import 'package:apo/features/checkout/domain/usecases/request_quote_usecase.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_cubit.dart';
 import 'package:apo/features/home/data/repositories/products_repository_impl.dart';
@@ -35,6 +41,11 @@ Future<void> setupGetIt() async {
   const secureStorage = FlutterSecureStorage();
   getIt.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
 
+  final token = await secureStorage.read(key: SecureStorageKey.authToken);
+  if (token.isNotNullOrEmpty()) {
+    DioFactory.setAuthToken(token);
+  }
+
   getIt.registerLazySingleton<Dio>(() => DioFactory.create());
 
   getIt.registerFactory(() => LoginCubit(getIt<LoginUseCase>()));
@@ -52,6 +63,10 @@ Future<void> setupGetIt() async {
       getIt<RequestQuoteUseCase>(),
       getIt<CheckoutUseCase>(),
       getIt<GetShipViaOptionsUseCase>(),
+      getTransferSelectionsUseCase: getIt<GetTransferSelectionsUseCase>(),
+      createTransferUseCase: getIt<CreateTransferUseCase>(),
+      getTransferTypeOptionsUseCase: getIt<GetTransferTypeOptionsUseCase>(),
+      getSheetTypeOptionsUseCase: getIt<GetSheetTypeOptionsUseCase>(),
       type: type,
     ),
   );
@@ -70,6 +85,18 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<GetShipViaOptionsUseCase>(
     () => GetShipViaOptionsUseCase(getIt<CheckoutRepository>()),
+  );
+  getIt.registerLazySingleton<GetTransferSelectionsUseCase>(
+    () => GetTransferSelectionsUseCase(getIt<CheckoutRepository>()),
+  );
+  getIt.registerLazySingleton<GetTransferTypeOptionsUseCase>(
+    () => GetTransferTypeOptionsUseCase(getIt<CheckoutRepository>()),
+  );
+  getIt.registerLazySingleton<GetSheetTypeOptionsUseCase>(
+    () => GetSheetTypeOptionsUseCase(getIt<CheckoutRepository>()),
+  );
+  getIt.registerLazySingleton<CreateTransferUseCase>(
+    () => CreateTransferUseCase(getIt<CheckoutRepository>()),
   );
 
   getIt.registerLazySingleton<GetProductDetailsUseCase>(
