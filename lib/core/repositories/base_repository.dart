@@ -88,13 +88,13 @@ abstract class BaseRepository {
     final status = error.status;
 
     if (status == 403) {
-      unawaited(_clearSession());
+      unawaited(clearSession());
     }
   }
 
-  Future<void> _clearSession() async {
+  static Future<void> clearSession() async {
     await PreferencesHelper.clear();
     await SecureStorageHelper.clear();
-    navigatorKey.currentContext?.goNamed(RouteNames.login.name);
+    navigatorKey.currentContext?.goNamed(RouteNames.home.name);
   }
 }

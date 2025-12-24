@@ -6,9 +6,11 @@ import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/widgets/app_toast.dart';
 import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart';
 import 'package:apo/features/authentication/presentation/cubits/login_state.dart';
+import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginView extends StatelessWidget {
   final bool enableBackButton;
@@ -26,16 +28,13 @@ class LoginView extends StatelessWidget {
             AppToast.show(message: state.status.failureMessage);
           },
           success: (data) {
-            AppToast.show(
-              // message: LocaleKeys.verification_code_message.tr(),
-              // TODO: remove on production
-              message: 'success',
-              type: AppToastType.success,
-            );
+            context.read<ProfileCubit>().loadAuthStatus();
+            context.pop();
           },
         );
       },
       child: Scaffold(
+        appBar: AppBar(),
         body: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(

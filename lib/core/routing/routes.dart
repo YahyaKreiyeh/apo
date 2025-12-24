@@ -2,17 +2,18 @@ import 'package:apo/core/di/dependency_injection.dart';
 import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart';
 import 'package:apo/features/authentication/presentation/views/login_view.dart';
+import 'package:apo/features/checkout/checkout_type.dart';
+import 'package:apo/features/checkout/presentation/cubits/checkout_cubit.dart';
+import 'package:apo/features/checkout/presentation/views/checkout_view.dart';
 import 'package:apo/features/dashboard/views/dashboard_view.dart';
 import 'package:apo/features/dashboard/widgets/bottom_nav_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
-import 'package:apo/features/home/views/cart_view.dart';
-import 'package:apo/features/home/views/home_view.dart';
-import 'package:apo/features/home/views/orders_view.dart';
-import 'package:apo/features/home/views/product_view.dart';
-import 'package:apo/features/home/views/profile_view.dart';
-import 'package:apo/features/quote_request/presentation/cubits/quote_request_cubit.dart';
-import 'package:apo/features/quote_request/views/request_quote_view.dart';
+import 'package:apo/features/home/presentation/views/cart_view.dart';
+import 'package:apo/features/home/presentation/views/home_view.dart';
+import 'package:apo/features/home/presentation/views/orders_view.dart';
+import 'package:apo/features/home/presentation/views/product_view.dart';
+import 'package:apo/features/home/presentation/views/profile_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -137,12 +138,17 @@ final _bottomNavRoutes = [
 
 final _appRoutes = [
   GoRoute(
-    path: RouteNames.requestQuote.path,
-    name: RouteNames.requestQuote.name,
-    builder: (context, state) => BlocProvider(
-      create: (context) => getIt<QuoteRequestCubit>(),
-      child: RequestQuoteView(),
-    ),
+    path: RouteNames.checkout.path,
+    name: RouteNames.checkout.name,
+    builder: (context, state) {
+      final type = state.extra is CheckoutType
+          ? state.extra as CheckoutType
+          : CheckoutType.requestQuote;
+      return BlocProvider(
+        create: (_) => getIt<CheckoutCubit>(param1: type),
+        child: CheckoutView(),
+      );
+    },
   ),
   GoRoute(
     path: RouteNames.product.path,

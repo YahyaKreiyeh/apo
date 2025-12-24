@@ -5,6 +5,8 @@ class ApiConstants {
   static const String login = 'auth/login';
   static const String products = 'products';
   static const String quoteRequests = 'quote-requests';
+  static const String checkout = 'orders/checkout';
+  static const String shipViaDetails = 'masters/SHIP_VIA/details';
 }
 
 class ApiErrors {

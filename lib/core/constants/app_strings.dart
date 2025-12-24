@@ -13,6 +13,7 @@ class AppStrings {
   static const String enterYourEmail = 'Enter Your Email';
   static const String enterYourPassword = 'Enter Your Password';
   static const String signIn = 'Sign in';
+  static const String signOut = 'Sign out';
   static const String enterYourEmailAndPasswordToAccessYourAccount =
       'Enter your email and password to access your account';
   static const String emailRequired = 'Email is required';
@@ -26,6 +27,12 @@ class AppStrings {
   static const String cart = 'Cart';
   static const String cartEmpty = 'Your cart is empty';
   static const String continueShopping = 'Continue Shopping';
+  static const String checkout = 'Checkout';
+  static const String checkoutSubtitle =
+      'Review and confirm your details to complete your order.';
+  static const String submitCheckout = 'Submit Checkout';
+  static const String checkoutSuccess = 'Checkout submitted';
+  static const String checkoutFailed = 'Failed to submit checkout';
   static const String requestQuote = 'Request a Quote';
   static const String requestCustomQuote = 'Request a Custom Quote';
   static const String requestQuoteSubtitle =
@@ -50,11 +57,9 @@ class AppStrings {
   static const String city = 'City';
   static const String state = 'State';
   static const String zipCode = 'ZIP Code';
-  static const String country = 'Country';
   static const String cityHint = 'New York';
   static const String stateHint = 'NY';
   static const String zipCodeHint = '10001';
-  static const String countryHint = 'United States';
   static const String orderDetails = 'Order Details';
   static const String additionalNotesOptional = 'Additional Notes (Optional)';
   static const String additionalNotesHint =
@@ -66,6 +71,25 @@ class AppStrings {
   static const String embroideryLocationsHint = '1';
   static const String desiredShipDate = 'Desired Ship Date';
   static const String desiredShipDateHint = 'mm/dd/yyyy';
+  static const String jobInformation = 'Job Information';
+  static const String jobDescription = 'Job Description';
+  static const String jobDescriptionHint = 'Describe the job requirements';
+  static const String jobComment = 'Job Comment';
+  static const String jobCommentHint = 'Any additional comments about the job';
+  static const String shippingInformation = 'Shipping Information';
+  static const String shipVia = 'Ship Via';
+  static const String selectShippingMethod = 'Select shipping method';
+  static const String requestedShipDate = 'Requested Ship Date';
+  static const String requestedShipDateHint = 'mm/dd/yyyy';
+  static const String shippingInstructions = 'Shipping Instructions';
+  static const String shippingInstructionsHint =
+      'Any special shipping instructions';
+  static const String mustShipByRequestedDate = 'Must ship by requested date';
+  static const String transferSelection = 'Transfer Selection';
+  static const String addExistingTransfer = 'Add Existing Transfer';
+  static const String createNewTransfer = 'Create New Transfer';
+  static const String selectedTransfers = 'Selected Transfers';
+  static const String noTransfersSelected = 'No transfers selected';
   static const String submitQuoteRequest = 'Submit Quote Request';
   static const String cancel = 'Cancel';
   static const String requiredField = 'This field is required';
