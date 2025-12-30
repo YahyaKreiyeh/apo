@@ -12,6 +12,7 @@ class ProductModel {
   final bool hasCustomization;
   final int minimumOrderQuantity;
   final int standardProductionDays;
+  final double basePrice;
   final bool isActive;
   final List<CategoryModel> categories;
   final ProductImageModel? mainImage;
@@ -32,6 +33,7 @@ class ProductModel {
     required this.hasCustomization,
     required this.minimumOrderQuantity,
     required this.standardProductionDays,
+    required this.basePrice,
     required this.isActive,
     required this.categories,
     required this.mainImage,
@@ -66,10 +68,14 @@ class CategoryModel {
 @JsonSerializable()
 class ProductImageModel {
   final int imageId;
+  @JsonKey(defaultValue: '')
   final String imageUrl;
+  @JsonKey(defaultValue: '')
   final String thumbnailUrl;
+  @JsonKey(defaultValue: '')
   final String imageType;
   final int displayOrder;
+  @JsonKey(defaultValue: '')
   final String altText;
 
   const ProductImageModel({
@@ -103,15 +109,21 @@ class PriceRangeModel {
 @JsonSerializable()
 class VariantModel {
   final int variantId;
+  @JsonKey(defaultValue: '')
   final String variantSKU;
+  @JsonKey(defaultValue: '')
   final String colorName;
+  @JsonKey(defaultValue: '')
   final String colorCode;
   final SizeTypeModel? sizeType;
+  @JsonKey(defaultValue: 0)
   final double basePrice;
   final double weight;
+  @JsonKey(defaultValue: '')
   final String dimensions;
   final bool isActive;
   final int inventoryAvailable;
+  @JsonKey(defaultValue: <ProductImageModel>[])
   final List<ProductImageModel> images;
 
   const VariantModel({
@@ -137,7 +149,9 @@ class VariantModel {
 @JsonSerializable()
 class SizeTypeModel {
   final int sizeTypeId;
+  @JsonKey(defaultValue: '')
   final String sizeCode;
+  @JsonKey(defaultValue: '')
   final String sizeName;
 
   const SizeTypeModel({

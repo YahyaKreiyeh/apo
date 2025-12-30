@@ -1,3 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:apo/core/constants/shared_preferences_key.dart';
+import 'package:apo/core/helpers/preferences_helper.dart';
+import 'package:apo/core/helpers/secure_storage_helper.dart';
 import 'package:apo/core/mixins/cubit_mixin.dart';
 import 'package:apo/core/models/api_response_model.dart';
 import 'package:apo/core/models/result.dart';
@@ -21,6 +27,17 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
       return const ApiResponseModel.success([]);
     }
     safeEmit(state.copyWith(cartStatus: const Result.loading()));
+    final isAuthenticated = await _isAuthenticated();
+    if (!isAuthenticated) {
+      final items = await _getLocalCartItems();
+      safeEmit(
+        state.copyWith(
+          items: items,
+          cartStatus: const Result.success(data: null),
+        ),
+      );
+      return ApiResponseModel.success(items);
+    }
     final response = await _getCartItemsUseCase();
     response.when(
       success: (items) => safeEmit(
@@ -72,27 +89,79 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     return response;
   }
 
-  void removeProduct(int productId) {
+  void addProductLocally(
+    ProductDetailsEntity product, {
+    int quantity = 1,
+    bool hasPersonalization = false,
+    VariantEntity? selectedVariant,
+  }) {
+    if (state.addStatus.isLoading) {
+      return;
+    }
+    safeEmit(state.copyWith(addStatus: const Result.loading()));
+    final safeQuantity = quantity < 1 ? 1 : quantity;
+    final resolvedVariant =
+        selectedVariant ??
+        (product.variants.isNotEmpty ? product.variants.first : null);
+    final variantId = resolvedVariant?.variantId ?? 0;
+    final imageUrl =
+        resolvedVariant != null && resolvedVariant.images.isNotEmpty
+        ? resolvedVariant.images.first.imageUrl
+        : (product.images.isNotEmpty ? product.images.first.imageUrl : '');
+    final existingIndex = state.items.indexWhere(
+      (item) =>
+          item.productId == product.productId && item.variantId == variantId,
+    );
+    final updatedItems = [...state.items];
+    if (existingIndex == -1) {
+      updatedItems.add(
+        CartItemEntity(
+          productId: product.productId,
+          variantId: variantId,
+          name: product.productName,
+          productSku: product.productSKU,
+          unitPrice: resolvedVariant?.basePrice,
+          imageUrl: imageUrl,
+          quantity: safeQuantity,
+          hasPersonalization: hasPersonalization,
+        ),
+      );
+    } else {
+      final existing = updatedItems[existingIndex];
+      updatedItems[existingIndex] = existing.copyWith(
+        quantity: existing.quantity + safeQuantity,
+        hasPersonalization: existing.hasPersonalization || hasPersonalization,
+        unitPrice: resolvedVariant?.basePrice ?? existing.unitPrice,
+        imageUrl: imageUrl.isNotEmpty ? imageUrl : existing.imageUrl,
+        name: product.productName,
+        productSku: product.productSKU,
+      );
+    }
     safeEmit(
       state.copyWith(
-        items: state.items
-            .where((item) => item.productId != productId)
-            .toList(),
+        items: updatedItems,
+        addStatus: const Result.success(data: null),
       ),
     );
+    unawaited(_persistLocalCartIfGuest(updatedItems));
+  }
+
+  void removeProduct(int productId) {
+    final updatedItems = state.items
+        .where((item) => item.productId != productId)
+        .toList();
+    safeEmit(state.copyWith(items: updatedItems));
+    unawaited(_persistLocalCartIfGuest(updatedItems));
   }
 
   void removeItem(int productId, int variantId) {
-    safeEmit(
-      state.copyWith(
-        items: state.items
-            .where(
-              (item) =>
-                  item.productId != productId || item.variantId != variantId,
-            )
-            .toList(),
-      ),
-    );
+    final updatedItems = state.items
+        .where(
+          (item) => item.productId != productId || item.variantId != variantId,
+        )
+        .toList();
+    safeEmit(state.copyWith(items: updatedItems));
+    unawaited(_persistLocalCartIfGuest(updatedItems));
   }
 
   void updateQuantity(int productId, int variantId, int quantity) {
@@ -106,6 +175,7 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     final updatedItems = [...state.items];
     updatedItems[index] = updatedItems[index].copyWith(quantity: safeQuantity);
     safeEmit(state.copyWith(items: updatedItems));
+    unawaited(_persistLocalCartIfGuest(updatedItems));
   }
 
   void updatePersonalization(
@@ -124,9 +194,72 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
       hasPersonalization: hasPersonalization,
     );
     safeEmit(state.copyWith(items: updatedItems));
+    unawaited(_persistLocalCartIfGuest(updatedItems));
   }
 
   void clear() {
     safeEmit(state.copyWith(items: const []));
+    unawaited(_persistLocalCartIfGuest(const <CartItemEntity>[]));
+  }
+
+  Future<bool> _isAuthenticated() async {
+    final token = await SecureStorageHelper.getAuthToken();
+    return token.trim().isNotEmpty;
+  }
+
+  Future<void> _persistLocalCartIfGuest(List<CartItemEntity> items) async {
+    final isAuthenticated = await _isAuthenticated();
+    if (isAuthenticated) return;
+    await _setLocalCartItems(items);
+  }
+
+  Future<List<CartItemEntity>> _getLocalCartItems() async {
+    final raw = PreferencesHelper.getString(SharedPreferencesKey.localCartKey);
+    if (raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map(_cartItemFromJson)
+          .toList();
+    } catch (_) {
+      await PreferencesHelper.removeData(SharedPreferencesKey.localCartKey);
+      return const [];
+    }
+  }
+
+  Future<void> _setLocalCartItems(List<CartItemEntity> items) async {
+    final payload = items.map(_cartItemToJson).toList();
+    await PreferencesHelper.setData(
+      SharedPreferencesKey.localCartKey,
+      jsonEncode(payload),
+    );
+  }
+
+  CartItemEntity _cartItemFromJson(Map<String, dynamic> json) {
+    return CartItemEntity(
+      productId: (json['productId'] as num?)?.toInt() ?? 0,
+      variantId: (json['variantId'] as num?)?.toInt() ?? 0,
+      name: (json['name'] as String?) ?? '',
+      productSku: (json['productSku'] as String?) ?? '',
+      unitPrice: (json['unitPrice'] as num?)?.toDouble(),
+      imageUrl: (json['imageUrl'] as String?) ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      hasPersonalization: (json['hasPersonalization'] as bool?) ?? false,
+    );
+  }
+
+  Map<String, dynamic> _cartItemToJson(CartItemEntity item) {
+    return {
+      'productId': item.productId,
+      'variantId': item.variantId,
+      'name': item.name,
+      'productSku': item.productSku,
+      'unitPrice': item.unitPrice,
+      'imageUrl': item.imageUrl,
+      'quantity': item.quantity,
+      'hasPersonalization': item.hasPersonalization,
+    };
   }
 }

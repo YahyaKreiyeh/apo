@@ -17,6 +17,7 @@ import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_state.dart';
+import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +31,9 @@ class ProductView extends StatelessWidget {
     return BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
       builder: (context, state) {
         final product = state.status.successValue;
+        final isAuthenticated = context.select<ProfileCubit, bool>(
+          (cubit) => cubit.state.isAuthenticated,
+        );
         return BlocListener<CartCubit, CartState>(
           listenWhen: (previous, current) =>
               previous.addStatus != current.addStatus,
@@ -95,13 +99,24 @@ class ProductView extends StatelessWidget {
                                     product,
                                     state.selectedVariantId,
                                   );
-                                  await context.read<CartCubit>().addProduct(
-                                    product,
-                                    quantity: state.quantity,
-                                    hasPersonalization:
-                                        state.hasPersonalization,
-                                    selectedVariant: selectedVariant,
-                                  );
+                                  final cartCubit = context.read<CartCubit>();
+                                  if (isAuthenticated) {
+                                    await cartCubit.addProduct(
+                                      product,
+                                      quantity: state.quantity,
+                                      hasPersonalization:
+                                          state.hasPersonalization,
+                                      selectedVariant: selectedVariant,
+                                    );
+                                  } else {
+                                    cartCubit.addProductLocally(
+                                      product,
+                                      quantity: state.quantity,
+                                      hasPersonalization:
+                                          state.hasPersonalization,
+                                      selectedVariant: selectedVariant,
+                                    );
+                                  }
                                 },
                           child: cartState.addStatus.isLoading
                               ? CircularProgressIndicator()

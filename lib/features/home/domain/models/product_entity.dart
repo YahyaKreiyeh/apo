@@ -7,6 +7,7 @@ class ProductEntity {
   final bool hasCustomization;
   final int minimumOrderQuantity;
   final int standardProductionDays;
+  final double basePrice;
   final bool isActive;
   final List<CategoryEntity> categories;
   final ProductImageEntity? mainImage;
@@ -27,6 +28,7 @@ class ProductEntity {
     required this.hasCustomization,
     required this.minimumOrderQuantity,
     required this.standardProductionDays,
+    required this.basePrice,
     required this.isActive,
     required this.categories,
     required this.mainImage,

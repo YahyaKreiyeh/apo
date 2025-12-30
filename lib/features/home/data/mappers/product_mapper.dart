@@ -3,6 +3,7 @@ import 'package:apo/features/home/domain/models/product_entity.dart';
 
 extension ProductModelMapper on ProductModel? {
   ProductEntity toDomain() {
+    final categories = this?.categories ?? const <CategoryModel>[];
     return ProductEntity(
       productId: this?.productId ?? 0,
       productSKU: this?.productSKU ?? '',
@@ -12,10 +13,11 @@ extension ProductModelMapper on ProductModel? {
       hasCustomization: this?.hasCustomization ?? false,
       minimumOrderQuantity: this?.minimumOrderQuantity ?? 0,
       standardProductionDays: this?.standardProductionDays ?? 0,
+      basePrice: this?.basePrice ?? 0,
       isActive: this?.isActive ?? false,
-      categories:
-          this?.categories.map((category) => category.toDomain()).toList() ??
-              const [],
+      categories: categories.isEmpty
+          ? const []
+          : categories.map((category) => category.toDomain()).toList(),
       mainImage: this?.mainImage?.toDomain(),
       variantCount: this?.variantCount ?? 0,
       priceRange: this?.priceRange?.toDomain(),
@@ -23,7 +25,7 @@ extension ProductModelMapper on ProductModel? {
       availableSizes: this?.availableSizes ?? const [],
       variants:
           this?.variants.map((variant) => variant.toDomain()).toList() ??
-              const [],
+          const [],
       createdAt: this?.createdAt,
       updatedAt: this?.updatedAt,
     );
@@ -32,10 +34,7 @@ extension ProductModelMapper on ProductModel? {
 
 extension CategoryModelMapper on CategoryModel {
   CategoryEntity toDomain() {
-    return CategoryEntity(
-      categoryId: categoryId,
-      categoryName: categoryName,
-    );
+    return CategoryEntity(categoryId: categoryId, categoryName: categoryName);
   }
 }
 
@@ -54,10 +53,7 @@ extension ProductImageModelMapper on ProductImageModel {
 
 extension PriceRangeModelMapper on PriceRangeModel {
   PriceRangeEntity toDomain() {
-    return PriceRangeEntity(
-      min: min,
-      max: max,
-    );
+    return PriceRangeEntity(min: min, max: max);
   }
 }
 

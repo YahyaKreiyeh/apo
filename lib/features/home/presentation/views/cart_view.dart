@@ -1,6 +1,7 @@
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
+import 'package:apo/core/models/result.dart';
 import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
@@ -65,6 +66,35 @@ class CartView extends StatelessWidget {
       ),
       body: BlocBuilder<CartCubit, CartState>(
         builder: (context, state) {
+          final showInitialLoading =
+              state.cartStatus.isLoading && state.items.isEmpty;
+          final showError = state.cartStatus.isFailure && state.items.isEmpty;
+          if (showInitialLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
+          if (showError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(Constants.defaultPadding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.cartStatus.failureMessage,
+                      style: TextStyles.text14400,
+                    ),
+                    VerticalSpace(12),
+                    ElevatedButton(
+                      onPressed: () => context.read<CartCubit>().loadCart(),
+                      child: Text(AppStrings.retry),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           if (state.items.isEmpty) {
             return Center(
               child: Text(AppStrings.cartEmpty, style: TextStyles.text14400),
@@ -77,9 +107,7 @@ class CartView extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = state.items[index];
               return Dismissible(
-                key: ValueKey(
-                  '${item.productId}-${item.variantId}',
-                ),
+                key: ValueKey('${item.productId}-${item.variantId}'),
                 background: _DismissBackground(
                   alignment: Alignment.centerLeft,
                   icon: Icons.delete_outline,
@@ -88,9 +116,10 @@ class CartView extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   icon: Icons.delete_outline,
                 ),
-                onDismissed: (_) => context
-                    .read<CartCubit>()
-                    .removeItem(item.productId, item.variantId),
+                onDismissed: (_) => context.read<CartCubit>().removeItem(
+                  item.productId,
+                  item.variantId,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(Constants.defaultPadding),
                   decoration: BoxDecoration(
@@ -175,20 +204,20 @@ class CartView extends StatelessWidget {
                           HorizontalSpace(12),
                           _QuantityStepper(
                             quantity: item.quantity,
-                                    onDecrease: item.quantity > 1
-                                        ? () =>
-                                              context.read<CartCubit>().updateQuantity(
-                                                item.productId,
-                                                item.variantId,
-                                                item.quantity - 1,
-                                              )
-                                        : null,
-                                    onIncrease: () =>
-                                        context.read<CartCubit>().updateQuantity(
-                                          item.productId,
-                                          item.variantId,
-                                          item.quantity + 1,
-                                        ),
+                            onDecrease: item.quantity > 1
+                                ? () =>
+                                      context.read<CartCubit>().updateQuantity(
+                                        item.productId,
+                                        item.variantId,
+                                        item.quantity - 1,
+                                      )
+                                : null,
+                            onIncrease: () =>
+                                context.read<CartCubit>().updateQuantity(
+                                  item.productId,
+                                  item.variantId,
+                                  item.quantity + 1,
+                                ),
                           ),
                           const Spacer(),
                           Column(
@@ -231,9 +260,8 @@ class CartView extends StatelessWidget {
                           style: TextStyles.text14400,
                         ),
                         controlAffinity: ListTileControlAffinity.leading,
-                        onChanged: (value) => context
-                            .read<CartCubit>()
-                            .updatePersonalization(
+                        onChanged: (value) =>
+                            context.read<CartCubit>().updatePersonalization(
                               item.productId,
                               item.variantId,
                               value ?? false,

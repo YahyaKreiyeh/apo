@@ -65,202 +65,215 @@ class _HomeViewState extends State<HomeView> {
         ),
         actionsPadding: EdgeInsets.only(right: 8),
       ),
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Constants.defaultPadding,
+      body: RefreshIndicator(
+        onRefresh: () => context.read<ProductsCubit>().loadInitial(),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Constants.defaultPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(AppStrings.hello, style: TextStyles.text28600),
+                    Text(
+                      AppStrings.welcomeToApploEmb,
+                      style: TextStyles.text15400.copyWith(
+                        color: Theme.of(context).colorScheme.secondaryText,
+                      ),
+                    ),
+                    VerticalSpace(17),
+                    TextField(
+                      onTapOutside: (_) =>
+                          FocusManager.instance.primaryFocus?.unfocus(),
+                      textInputAction: TextInputAction.search,
+                      style: TextStyles.text14400.copyWith(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Theme.of(
+                          context,
+                        ).colorScheme.secondaryContainer,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            ThemeConstants.inputFieldRadius,
+                          ),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            ThemeConstants.inputFieldRadius,
+                          ),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            ThemeConstants.inputFieldRadius,
+                          ),
+                          borderSide: BorderSide.none,
+                        ),
+                        hintStyle: TextStyles.text14400.copyWith(
+                          color: Theme.of(context).colorScheme.hintText,
+                        ),
+                        prefixIcon: const Icon(Icons.search_outlined),
+                        prefixIconColor: Theme.of(
+                          context,
+                        ).colorScheme.secondaryText,
+                        hintText: AppStrings.search,
+                      ),
+                      onChanged: (v) {},
+                      onSubmitted: (v) {},
+                    ),
+                    VerticalSpace(20),
+                  ],
+                ),
               ),
+            ),
+            SliverToBoxAdapter(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppStrings.hello, style: TextStyles.text28600),
-                  Text(
-                    AppStrings.welcomeToApploEmb,
-                    style: TextStyles.text15400.copyWith(
-                      color: Theme.of(context).colorScheme.secondaryText,
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      enlargeCenterPage: true,
+                      enlargeStrategy: CenterPageEnlargeStrategy.height,
+                      viewportFraction: 1,
+                      autoPlay: true,
+                      enableInfiniteScroll: false,
                     ),
+                    items:
+                        [
+                          Assets.images.banner1,
+                          Assets.images.banner2,
+                          Assets.images.banner3,
+                          Assets.images.banner4,
+                          Assets.images.banner5,
+                          Assets.images.banner6,
+                          Assets.images.banner7,
+                          Assets.images.banner8,
+                          Assets.images.banner9,
+                        ].map((banner) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Constants.defaultPadding,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                Constants.adsBannerRadius,
+                              ),
+                              child: banner.image(fit: BoxFit.fill),
+                              // CachedNetworkImage(
+                              //   imageUrl: Constants.getPlaceHolderImage(ad),
+                              //   fit: BoxFit.fill,
+                              //   width: double.infinity,
+                              //   placeholder: (_, _) => ShimmerPlaceholder(),
+                              //   errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                              // ),
+                            ),
+                          );
+                        }).toList(),
                   ),
-                  VerticalSpace(17),
-                  TextField(
-                    onTapOutside: (_) =>
-                        FocusManager.instance.primaryFocus?.unfocus(),
-                    textInputAction: TextInputAction.search,
-                    style: TextStyles.text14400.copyWith(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Theme.of(
-                        context,
-                      ).colorScheme.secondaryContainer,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          ThemeConstants.inputFieldRadius,
-                        ),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          ThemeConstants.inputFieldRadius,
-                        ),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          ThemeConstants.inputFieldRadius,
-                        ),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintStyle: TextStyles.text14400.copyWith(
-                        color: Theme.of(context).colorScheme.hintText,
-                      ),
-                      prefixIcon: const Icon(Icons.search_outlined),
-                      prefixIconColor: Theme.of(
-                        context,
-                      ).colorScheme.secondaryText,
-                      hintText: AppStrings.search,
-                    ),
-                    onChanged: (v) {},
-                    onSubmitted: (v) {},
-                  ),
-                  VerticalSpace(20),
+                  VerticalSpace(10),
                 ],
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                CarouselSlider(
-                  options: CarouselOptions(
-                    enlargeCenterPage: true,
-                    enlargeStrategy: CenterPageEnlargeStrategy.height,
-                    viewportFraction: 1,
-                    autoPlay: true,
-                    enableInfiniteScroll: false,
-                  ),
-                  items: [10, 20, 30].map((ad) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Constants.defaultPadding,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          Constants.adsBannerRadius,
-                        ),
-                        child: Assets.images.banner.image(fit: BoxFit.fill),
-                        // CachedNetworkImage(
-                        //   imageUrl: Constants.getPlaceHolderImage(ad),
-                        //   fit: BoxFit.fill,
-                        //   width: double.infinity,
-                        //   placeholder: (_, _) => ShimmerPlaceholder(),
-                        //   errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-                        // ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                VerticalSpace(10),
-              ],
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: FilterChips(
-              filters: [
-                AppStrings.newStylesAndColors,
-                AppStrings.topSellers,
-                AppStrings.knits,
-              ],
-              selectedIndex: 0,
-              onSelected: (s) {},
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Constants.defaultPadding,
+            SliverToBoxAdapter(
+              child: FilterChips(
+                filters: [
+                  AppStrings.newStylesAndColors,
+                  AppStrings.topSellers,
+                  AppStrings.knits,
+                ],
+                selectedIndex: 0,
+                onSelected: (s) {},
               ),
-              child: Text(AppStrings.topSellers, style: TextStyles.text17500),
             ),
-          ),
-          BlocBuilder<ProductsCubit, ProductsState>(
-            builder: (context, state) {
-              final showInitialLoading =
-                  state.status.isLoading && state.items.isEmpty;
-              final showError = state.status.isFailure && state.items.isEmpty;
-              if (showError) {
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Constants.defaultPadding,
-                      vertical: 20,
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          state.status.failureMessage,
-                          style: TextStyles.text14400,
-                        ),
-                        VerticalSpace(12),
-                        ElevatedButton(
-                          onPressed: () =>
-                              context.read<ProductsCubit>().loadInitial(),
-                          child: Text(AppStrings.retry),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              final itemsCount = showInitialLoading ? 6 : state.items.length;
-              return SliverPadding(
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: Constants.defaultPadding,
-                  vertical: 10,
                 ),
-                sliver: SliverAlignedGrid.count(
-                  itemCount: itemsCount,
-                  itemBuilder: (context, index) {
-                    if (showInitialLoading) {
-                      return _ProductCardPlaceholder();
-                    }
-                    final product = state.items[index];
-                    final imageUrl =
-                        product.mainImage?.imageUrl ??
-                        Constants.getPlaceHolderImage((index + 1) * 10);
-                    return _ProductCard(
-                      imageUrl: imageUrl,
-                      name: product.productName,
-                      price: product.priceRange?.min,
-                      onTap: () => context.pushNamed(
-                        RouteNames.product.name,
-                        pathParameters: {'id': product.productId.toString()},
+                child: Text(AppStrings.topSellers, style: TextStyles.text17500),
+              ),
+            ),
+            BlocBuilder<ProductsCubit, ProductsState>(
+              builder: (context, state) {
+                final showInitialLoading =
+                    state.status.isLoading && state.items.isEmpty;
+                final showError = state.status.isFailure && state.items.isEmpty;
+                if (showError) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Constants.defaultPadding,
+                        vertical: 20,
                       ),
-                    );
-                  },
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                ),
-              );
-            },
-          ),
-          BlocBuilder<ProductsCubit, ProductsState>(
-            builder: (context, state) {
-              if (!state.isLoadingMore) return const SliverToBoxAdapter();
-              return SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              );
-            },
-          ),
-        ],
+                      child: Column(
+                        children: [
+                          Text(
+                            state.status.failureMessage,
+                            style: TextStyles.text14400,
+                          ),
+                          VerticalSpace(12),
+                          ElevatedButton(
+                            onPressed: () =>
+                                context.read<ProductsCubit>().loadInitial(),
+                            child: Text(AppStrings.retry),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                final itemsCount = showInitialLoading ? 6 : state.items.length;
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Constants.defaultPadding,
+                    vertical: 10,
+                  ),
+                  sliver: SliverAlignedGrid.count(
+                    itemCount: itemsCount,
+                    itemBuilder: (context, index) {
+                      if (showInitialLoading) {
+                        return _ProductCardPlaceholder();
+                      }
+                      final product = state.items[index];
+                      final imageUrl =
+                          product.mainImage?.imageUrl ??
+                          Constants.getPlaceHolderImage((index + 1) * 10);
+                      return _ProductCard(
+                        imageUrl: imageUrl,
+                        name: product.productName,
+                        price: product.priceRange?.min,
+                        onTap: () => context.pushNamed(
+                          RouteNames.product.name,
+                          pathParameters: {'id': product.productId.toString()},
+                        ),
+                      );
+                    },
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                  ),
+                );
+              },
+            ),
+            BlocBuilder<ProductsCubit, ProductsState>(
+              builder: (context, state) {
+                if (!state.isLoadingMore) return const SliverToBoxAdapter();
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -14,14 +14,58 @@ import 'package:flutter/widgets.dart';
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  /// File path: assets/images/banner.jpg
-  AssetGenImage get banner => const AssetGenImage('assets/images/banner.jpg');
+  /// File path: assets/images/banner_1.jpg
+  AssetGenImage get banner1 =>
+      const AssetGenImage('assets/images/banner_1.jpg');
+
+  /// File path: assets/images/banner_2.jpg
+  AssetGenImage get banner2 =>
+      const AssetGenImage('assets/images/banner_2.jpg');
+
+  /// File path: assets/images/banner_3.jpg
+  AssetGenImage get banner3 =>
+      const AssetGenImage('assets/images/banner_3.jpg');
+
+  /// File path: assets/images/banner_4.jpg
+  AssetGenImage get banner4 =>
+      const AssetGenImage('assets/images/banner_4.jpg');
+
+  /// File path: assets/images/banner_5.jpg
+  AssetGenImage get banner5 =>
+      const AssetGenImage('assets/images/banner_5.jpg');
+
+  /// File path: assets/images/banner_6.jpg
+  AssetGenImage get banner6 =>
+      const AssetGenImage('assets/images/banner_6.jpg');
+
+  /// File path: assets/images/banner_7.jpg
+  AssetGenImage get banner7 =>
+      const AssetGenImage('assets/images/banner_7.jpg');
+
+  /// File path: assets/images/banner_8.jpg
+  AssetGenImage get banner8 =>
+      const AssetGenImage('assets/images/banner_8.jpg');
+
+  /// File path: assets/images/banner_9.jpg
+  AssetGenImage get banner9 =>
+      const AssetGenImage('assets/images/banner_9.jpg');
 
   /// File path: assets/images/logo.png
   AssetGenImage get logo => const AssetGenImage('assets/images/logo.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [banner, logo];
+  List<AssetGenImage> get values => [
+    banner1,
+    banner2,
+    banner3,
+    banner4,
+    banner5,
+    banner6,
+    banner7,
+    banner8,
+    banner9,
+    logo,
+  ];
 }
 
 class Assets {
