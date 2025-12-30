@@ -16,4 +16,7 @@ abstract class CartApiService {
 
   @GET(ApiConstants.cart)
   Future<BaseApiResponse<CartModel>> getCart();
+
+  @DELETE(ApiConstants.cart)
+  Future<BaseApiResponse<void>> clearCart();
 }

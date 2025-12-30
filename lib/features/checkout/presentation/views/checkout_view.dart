@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
@@ -428,7 +430,11 @@ class _CheckoutViewState extends State<CheckoutView> {
 
   void _handleStatus(BuildContext context, CheckoutState state) {
     if (state.status.isSuccess) {
-      context.read<CartCubit>().clear();
+      if (state.type == CheckoutType.requestQuote) {
+        unawaited(context.read<CartCubit>().clearCart());
+      } else {
+        context.read<CartCubit>().clear();
+      }
       AppToast.show(
         message: state.type.successMessage,
         type: AppToastType.success,

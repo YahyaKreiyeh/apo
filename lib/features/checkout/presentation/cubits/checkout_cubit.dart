@@ -257,7 +257,6 @@ class CheckoutCubit extends Cubit<CheckoutState>
   }
 
   QuoteRequestParameters _buildQuoteParameters(List<CartItemEntity> items) {
-    final shipDate = state.desiredShipDate ?? DateTime.now().toUtc();
     return QuoteRequestParameters(
       firstName: state.firstName.trim(),
       lastName: state.lastName.trim(),
@@ -270,6 +269,7 @@ class CheckoutCubit extends Cubit<CheckoutState>
         addressLine2: state.shipLine2.trim(),
         city: state.shipCity.trim(),
         state: state.shipState.trim(),
+        country: 'USA',
         zipCode: state.shipZip.trim(),
       ),
       billingAddress: QuoteRequestAddressParameters(
@@ -277,13 +277,13 @@ class CheckoutCubit extends Cubit<CheckoutState>
         addressLine2: state.billLine2.trim(),
         city: state.billCity.trim(),
         state: state.billState.trim(),
+        country: 'USA',
         zipCode: state.billZip.trim(),
       ),
       customerNotes: state.customerNotes.trim(),
       metadata: QuoteRequestMetadataParameters(
         artworkDescription: state.artworkDescription.trim(),
         numLocations: int.tryParse(state.numberOfLocations.trim()) ?? 0,
-        shipDate: shipDate,
       ),
     );
   }

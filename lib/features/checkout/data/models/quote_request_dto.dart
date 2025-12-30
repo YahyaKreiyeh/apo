@@ -1,5 +1,3 @@
-import 'package:apo/features/home/data/models/product_details_model.dart';
-
 class QuoteRequestDto {
   final String firstName;
   final String lastName;
@@ -44,14 +42,12 @@ class QuoteRequestItemDto {
   final int quantity;
   final bool hasPersonalization;
   final String productionNotes;
-  final ProductDetailsModel product;
 
   const QuoteRequestItemDto({
     required this.variantId,
     required this.quantity,
     required this.hasPersonalization,
     required this.productionNotes,
-    required this.product,
   });
 
   Map<String, dynamic> toJson() => {
@@ -59,7 +55,6 @@ class QuoteRequestItemDto {
     'quantity': quantity,
     'hasPersonalization': hasPersonalization,
     'productionNotes': productionNotes,
-    'product': product.toJson(),
   };
 }
 
@@ -68,6 +63,7 @@ class QuoteRequestAddressDto {
   final String addressLine2;
   final String city;
   final String state;
+  final String country;
   final String zipCode;
 
   const QuoteRequestAddressDto({
@@ -75,6 +71,7 @@ class QuoteRequestAddressDto {
     required this.addressLine2,
     required this.city,
     required this.state,
+    required this.country,
     required this.zipCode,
   });
 
@@ -83,6 +80,7 @@ class QuoteRequestAddressDto {
     'addressLine2': addressLine2,
     'city': city,
     'state': state,
+    'country': country,
     'zipCode': zipCode,
   };
 }
@@ -90,17 +88,14 @@ class QuoteRequestAddressDto {
 class QuoteRequestMetadataDto {
   final String artworkDescription;
   final int numLocations;
-  final String shipDate;
 
   const QuoteRequestMetadataDto({
     required this.artworkDescription,
     required this.numLocations,
-    required this.shipDate,
   });
 
   Map<String, dynamic> toJson() => {
     'artworkDescription': artworkDescription,
     'numLocations': numLocations,
-    'shipDate': shipDate,
   };
 }

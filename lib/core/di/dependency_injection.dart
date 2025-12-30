@@ -25,6 +25,7 @@ import 'package:apo/features/home/domain/repositories/cart_repository.dart';
 import 'package:apo/features/home/domain/repositories/products_repository.dart';
 import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
 import 'package:apo/features/home/domain/usecases/checkout_usecase.dart';
+import 'package:apo/features/home/domain/usecases/clear_cart_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
@@ -59,6 +60,7 @@ Future<void> setupGetIt() async {
     () => CartCubit(
       getIt<AddCartItemUseCase>(),
       getIt<GetCartItemsUseCase>(),
+      getIt<ClearCartUseCase>(),
     ),
   );
   getIt.registerLazySingleton<ProfileCubit>(() => ProfileCubit());
@@ -92,6 +94,9 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<GetCartItemsUseCase>(
     () => GetCartItemsUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<ClearCartUseCase>(
+    () => ClearCartUseCase(getIt<CartRepository>()),
   );
   getIt.registerLazySingleton<RequestQuoteUseCase>(
     () => RequestQuoteUseCase(getIt<CheckoutRepository>()),

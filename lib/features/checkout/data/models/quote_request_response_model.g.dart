@@ -11,7 +11,7 @@ QuoteRequestResponseModel _$QuoteRequestResponseModelFromJson(
 ) => QuoteRequestResponseModel(
   quoteRequestId: (json['quoteRequestId'] as num).toInt(),
   requestNumber: json['requestNumber'] as String,
-  userId: json['userId'] as String?,
+  userId: (json['userId'] as num?)?.toInt(),
   firstName: json['firstName'] as String,
   lastName: json['lastName'] as String,
   companyName: json['companyName'] as String,

@@ -30,7 +30,7 @@ class AppStrings {
   static const String checkout = 'Checkout';
   static const String checkoutSubtitle =
       'Review and confirm your details to complete your order.';
-  static const String submitCheckout = 'Submit Checkout';
+  static const String placeOrder = 'Place Order';
   static const String checkoutSuccess = 'Checkout submitted';
   static const String checkoutFailed = 'Failed to submit checkout';
   static const String requestQuote = 'Request a Quote';

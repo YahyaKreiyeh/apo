@@ -7,7 +7,7 @@ part 'quote_request_response_model.g.dart';
 class QuoteRequestResponseModel {
   final int quoteRequestId;
   final String requestNumber;
-  final String? userId;
+  final int? userId;
   final String firstName;
   final String lastName;
   final String companyName;

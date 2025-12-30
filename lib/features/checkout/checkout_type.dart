@@ -27,7 +27,7 @@ extension CheckoutTypeLabels on CheckoutType {
       case CheckoutType.requestQuote:
         return AppStrings.submitQuoteRequest;
       case CheckoutType.checkout:
-        return AppStrings.submitCheckout;
+        return AppStrings.placeOrder;
     }
   }
 

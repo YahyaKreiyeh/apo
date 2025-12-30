@@ -32,4 +32,11 @@ class CartRepositoryImpl extends BaseRepository implements CartRepository {
       mapper: (response) => response.data.toEntities(),
     );
   }
+
+  @override
+  Future<ApiResponseModel<void>> clearCart() {
+    return executeVoidApiCall(
+      apiCall: () async => await _apiService.clearCart(),
+    );
+  }
 }

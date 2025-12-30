@@ -31,6 +31,7 @@ class QuoteRequestAddressParameters {
   final String addressLine2;
   final String city;
   final String state;
+  final String country;
   final String zipCode;
 
   const QuoteRequestAddressParameters({
@@ -38,6 +39,7 @@ class QuoteRequestAddressParameters {
     required this.addressLine2,
     required this.city,
     required this.state,
+    required this.country,
     required this.zipCode,
   });
 }
@@ -45,11 +47,9 @@ class QuoteRequestAddressParameters {
 class QuoteRequestMetadataParameters {
   final String artworkDescription;
   final int numLocations;
-  final DateTime shipDate;
 
   const QuoteRequestMetadataParameters({
     required this.artworkDescription,
     required this.numLocations,
-    required this.shipDate,
   });
 }
