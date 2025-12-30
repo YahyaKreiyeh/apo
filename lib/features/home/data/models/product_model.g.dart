@@ -71,12 +71,22 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
     CategoryModel(
       categoryId: (json['categoryId'] as num?)?.toInt(),
       categoryName: json['categoryName'] as String?,
+      categorySlug: json['categorySlug'] as String?,
+      parentCategoryId: (json['parentCategoryId'] as num?)?.toInt(),
+      description: json['description'] as String?,
+      displayOrder: (json['displayOrder'] as num?)?.toInt(),
+      isActive: json['isActive'] as bool?,
     );
 
 Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
     <String, dynamic>{
       'categoryId': instance.categoryId,
       'categoryName': instance.categoryName,
+      'categorySlug': instance.categorySlug,
+      'parentCategoryId': instance.parentCategoryId,
+      'description': instance.description,
+      'displayOrder': instance.displayOrder,
+      'isActive': instance.isActive,
     };
 
 ProductImageModel _$ProductImageModelFromJson(Map<String, dynamic> json) =>

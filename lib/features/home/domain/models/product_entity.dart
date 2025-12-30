@@ -45,10 +45,20 @@ class ProductEntity {
 class CategoryEntity {
   final int? categoryId;
   final String? categoryName;
+  final String? categorySlug;
+  final int? parentCategoryId;
+  final String? description;
+  final int? displayOrder;
+  final bool? isActive;
 
   const CategoryEntity({
     this.categoryId,
     this.categoryName,
+    this.categorySlug,
+    this.parentCategoryId,
+    this.description,
+    this.displayOrder,
+    this.isActive,
   });
 }
 

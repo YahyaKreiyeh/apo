@@ -9,7 +9,6 @@ import 'package:apo/core/style/assets/assets.gen.dart';
 import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
-import 'package:apo/core/utilities/device_utility.dart';
 import 'package:apo/core/widgets/network_image_placeholder.dart';
 import 'package:apo/core/widgets/shimmer_placeholder.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
@@ -244,10 +243,15 @@ class _HomeViewState extends State<HomeView> {
                       final imageUrl =
                           product.mainImage?.imageUrl ??
                           Constants.getPlaceHolderImage((index + 1) * 10);
+                      final displayPrice =
+                          product.priceRange?.min ??
+                          (product.basePrice > 0 ? product.basePrice : null);
                       return _ProductCard(
                         imageUrl: imageUrl,
                         name: product.productName,
-                        price: product.priceRange?.min,
+                        sku: product.productSKU,
+                        description: product.description,
+                        price: displayPrice,
                         onTap: () => context.pushNamed(
                           RouteNames.product.name,
                           pathParameters: {'id': product.productId.toString()},
@@ -282,60 +286,125 @@ class _HomeViewState extends State<HomeView> {
 class _ProductCard extends StatelessWidget {
   final String imageUrl;
   final String name;
+  final String sku;
+  final String description;
   final double? price;
   final VoidCallback? onTap;
 
   const _ProductCard({
     required this.imageUrl,
     required this.name,
+    required this.sku,
+    required this.description,
     required this.price,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardRadius = BorderRadius.circular(14);
+    final secondaryText = theme.colorScheme.secondaryText;
     return InkWell(
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              CachedNetworkImage(
-                imageUrl: imageUrl,
-                height:
-                    (DeviceUtility.getScreenWidth(context) / 2) -
-                    Constants.defaultPadding -
-                    12,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => ShimmerPlaceholder(),
-                errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: IconButton.filled(
-                  onPressed: () {},
-                  icon: Icon(Icons.favorite_outline),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.secondaryContainer.withValues(
-                      alpha: 0.5,
+      borderRadius: cardRadius,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: cardRadius,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AspectRatio(
+                aspectRatio: 1.2,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => ShimmerPlaceholder(),
+                        errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: IconButton.filled(
+                        onPressed: () {},
+                        icon: Icon(Icons.favorite_outline),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.secondaryContainer
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          VerticalSpace(14),
-          Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
-          if (price != null)
-            Text(
-              '\$${price!.toStringAsFixed(0)}',
-              style: TextStyles.text14400.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  VerticalSpace(12),
+                  Text(
+                    name,
+                    style: TextStyles.text14500,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  VerticalSpace(6),
+                  Text(
+                    sku,
+                    style: TextStyles.text14400.copyWith(
+                      fontSize: 12,
+                      color: secondaryText,
+                    ),
+                  ),
+                  if (price != null) ...[
+                    VerticalSpace(10),
+                    Text(
+                      AppStrings.asLowAs,
+                      style: TextStyles.text14400.copyWith(
+                        fontSize: 12,
+                        color: secondaryText,
+                      ),
+                    ),
+                    Text(
+                      '\$${price!.toStringAsFixed(2)}',
+                      style: TextStyles.text18700.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                  if (description.isNotEmpty) ...[
+                    VerticalSpace(8),
+                    Text(
+                      description,
+                      style: TextStyles.text14400.copyWith(
+                        color: secondaryText,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -346,28 +415,66 @@ class _ProductCardPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardRadius = BorderRadius.circular(14);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height:
-              (DeviceUtility.getScreenWidth(context) / 2) -
-              Constants.defaultPadding -
-              12,
-          width: double.infinity,
-          child: ShimmerPlaceholder(),
-        ),
-        VerticalSpace(14),
         Container(
-          height: 14,
-          width: 100,
-          color: Theme.of(context).colorScheme.secondaryContainer,
-        ),
-        VerticalSpace(6),
-        Container(
-          height: 12,
-          width: 60,
-          color: Theme.of(context).colorScheme.secondaryContainer,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: cardRadius,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 1.2,
+                  child: ShimmerPlaceholder(),
+                ),
+              ),
+              VerticalSpace(12),
+              Container(
+                height: 14,
+                width: 110,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              VerticalSpace(6),
+              Container(
+                height: 12,
+                width: 70,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              VerticalSpace(12),
+              Container(
+                height: 12,
+                width: 60,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              VerticalSpace(6),
+              Container(
+                height: 16,
+                width: 80,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              VerticalSpace(8),
+              Container(
+                height: 12,
+                width: 90,
+                color: theme.colorScheme.secondaryContainer,
+              ),
+            ],
+          ),
         ),
       ],
     );

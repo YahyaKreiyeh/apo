@@ -10,6 +10,7 @@ class AppStrings {
   static const String newStylesAndColors = 'New Styles & Colors';
   static const String topSellers = 'Top Sellers';
   static const String knits = 'Knits';
+  static const String asLowAs = 'As low as';
   static const String enterYourEmail = 'Enter Your Email';
   static const String enterYourPassword = 'Enter Your Password';
   static const String signIn = 'Sign in';

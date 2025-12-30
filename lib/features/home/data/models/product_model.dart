@@ -56,8 +56,21 @@ class ProductModel {
 class CategoryModel {
   final int? categoryId;
   final String? categoryName;
+  final String? categorySlug;
+  final int? parentCategoryId;
+  final String? description;
+  final int? displayOrder;
+  final bool? isActive;
 
-  const CategoryModel({this.categoryId, this.categoryName});
+  const CategoryModel({
+    this.categoryId,
+    this.categoryName,
+    this.categorySlug,
+    this.parentCategoryId,
+    this.description,
+    this.displayOrder,
+    this.isActive,
+  });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) =>
       _$CategoryModelFromJson(json);

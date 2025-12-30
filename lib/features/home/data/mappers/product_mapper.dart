@@ -32,55 +32,64 @@ extension ProductModelMapper on ProductModel? {
   }
 }
 
-extension CategoryModelMapper on CategoryModel {
+extension CategoryModelMapper on CategoryModel? {
   CategoryEntity toDomain() {
-    return CategoryEntity(categoryId: categoryId, categoryName: categoryName);
+    return CategoryEntity(
+      categoryId: this?.categoryId,
+      categoryName: this?.categoryName,
+      categorySlug: this?.categorySlug,
+      parentCategoryId: this?.parentCategoryId,
+      description: this?.description,
+      displayOrder: this?.displayOrder,
+      isActive: this?.isActive,
+    );
   }
 }
 
-extension ProductImageModelMapper on ProductImageModel {
+extension ProductImageModelMapper on ProductImageModel? {
   ProductImageEntity toDomain() {
     return ProductImageEntity(
-      imageId: imageId,
-      imageUrl: imageUrl,
-      thumbnailUrl: thumbnailUrl,
-      imageType: imageType,
-      displayOrder: displayOrder,
-      altText: altText,
+      imageId: this?.imageId ?? 0,
+      imageUrl: this?.imageUrl ?? '',
+      thumbnailUrl: this?.thumbnailUrl ?? '',
+      imageType: this?.imageType ?? '',
+      displayOrder: this?.displayOrder ?? 0,
+      altText: this?.altText ?? '',
     );
   }
 }
 
-extension PriceRangeModelMapper on PriceRangeModel {
+extension PriceRangeModelMapper on PriceRangeModel? {
   PriceRangeEntity toDomain() {
-    return PriceRangeEntity(min: min, max: max);
+    return PriceRangeEntity(min: this?.min ?? 0, max: this?.max ?? 0);
   }
 }
 
-extension VariantModelMapper on VariantModel {
+extension VariantModelMapper on VariantModel? {
   VariantEntity toDomain() {
     return VariantEntity(
-      variantId: variantId,
-      variantSKU: variantSKU,
-      colorName: colorName,
-      colorCode: colorCode,
-      sizeType: sizeType?.toDomain(),
-      basePrice: basePrice,
-      weight: weight,
-      dimensions: dimensions,
-      isActive: isActive,
-      inventoryAvailable: inventoryAvailable,
-      images: images.map((image) => image.toDomain()).toList(),
+      variantId: this?.variantId ?? 0,
+      variantSKU: this?.variantSKU ?? '',
+      colorName: this?.colorName ?? '',
+      colorCode: this?.colorCode ?? '',
+      sizeType: this?.sizeType?.toDomain(),
+      basePrice: this?.basePrice ?? 0,
+      weight: this?.weight ?? 0,
+      dimensions: this?.dimensions ?? '',
+      isActive: this?.isActive ?? false,
+      inventoryAvailable: this?.inventoryAvailable ?? 0,
+      images:
+          this?.images.map((image) => image.toDomain()).toList() ?? const [],
     );
   }
 }
 
-extension SizeTypeModelMapper on SizeTypeModel {
+extension SizeTypeModelMapper on SizeTypeModel? {
   SizeTypeEntity toDomain() {
     return SizeTypeEntity(
-      sizeTypeId: sizeTypeId,
-      sizeCode: sizeCode,
-      sizeName: sizeName,
+      sizeTypeId: this?.sizeTypeId ?? 0,
+      sizeCode: this?.sizeCode ?? '',
+      sizeName: this?.sizeName ?? '',
     );
   }
 }
