@@ -15,12 +15,14 @@ class ProductDetailsEntity {
   final int minimumOrderQuantity;
   final int standardProductionDays;
   final int rushProductionDays;
+  final double basePrice;
   final bool isActive;
   final List<CategoryEntity> categories;
   final List<VariantEntity> variants;
   final List<ProductImageEntity> images;
   final List<dynamic> placementAreas;
   final List<dynamic> decorationMethods;
+  final List<PricingTierEntity> pricingTiers;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -39,13 +41,35 @@ class ProductDetailsEntity {
     required this.minimumOrderQuantity,
     required this.standardProductionDays,
     required this.rushProductionDays,
+    required this.basePrice,
     required this.isActive,
     required this.categories,
     required this.variants,
     required this.images,
     required this.placementAreas,
     required this.decorationMethods,
+    required this.pricingTiers,
     required this.createdAt,
     required this.updatedAt,
+  });
+}
+
+class PricingTierEntity {
+  final int pricingTierId;
+  final String tierName;
+  final String tierCode;
+  final int minQuantity;
+  final int? maxQuantity;
+  final int displayOrder;
+  final Map<String, double> customizationPrices;
+
+  const PricingTierEntity({
+    required this.pricingTierId,
+    required this.tierName,
+    required this.tierCode,
+    required this.minQuantity,
+    required this.maxQuantity,
+    required this.displayOrder,
+    required this.customizationPrices,
   });
 }

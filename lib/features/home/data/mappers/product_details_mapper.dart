@@ -19,6 +19,7 @@ extension ProductDetailsModelMapper on ProductDetailsModel? {
       minimumOrderQuantity: this?.minimumOrderQuantity ?? 0,
       standardProductionDays: this?.standardProductionDays ?? 0,
       rushProductionDays: this?.rushProductionDays ?? 0,
+      basePrice: this?.basePrice ?? 0,
       isActive: this?.isActive ?? false,
       categories:
           this?.categories.map((category) => category.toDomain()).toList() ??
@@ -29,8 +30,27 @@ extension ProductDetailsModelMapper on ProductDetailsModel? {
       images: this?.images.map((image) => image.toDomain()).toList() ?? const [],
       placementAreas: this?.placementAreas ?? const [],
       decorationMethods: this?.decorationMethods ?? const [],
+      pricingTiers:
+          this?.pricingTiers
+              .map((tier) => tier.toDomain())
+              .toList() ??
+          const [],
       createdAt: this?.createdAt,
       updatedAt: this?.updatedAt,
+    );
+  }
+}
+
+extension PricingTierModelMapper on PricingTierModel? {
+  PricingTierEntity toDomain() {
+    return PricingTierEntity(
+      pricingTierId: this?.pricingTierId ?? 0,
+      tierName: this?.tierName ?? '',
+      tierCode: this?.tierCode ?? '',
+      minQuantity: this?.minQuantity ?? 0,
+      maxQuantity: this?.maxQuantity,
+      displayOrder: this?.displayOrder ?? 0,
+      customizationPrices: this?.customizationPrices ?? const {},
     );
   }
 }

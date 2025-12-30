@@ -22,6 +22,7 @@ ProductDetailsModel _$ProductDetailsModelFromJson(Map<String, dynamic> json) =>
       minimumOrderQuantity: (json['minimumOrderQuantity'] as num).toInt(),
       standardProductionDays: (json['standardProductionDays'] as num).toInt(),
       rushProductionDays: (json['rushProductionDays'] as num).toInt(),
+      basePrice: (json['basePrice'] as num).toDouble(),
       isActive: json['isActive'] as bool,
       categories: (json['categories'] as List<dynamic>)
           .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
@@ -34,6 +35,11 @@ ProductDetailsModel _$ProductDetailsModelFromJson(Map<String, dynamic> json) =>
           .toList(),
       placementAreas: json['placementAreas'] as List<dynamic>,
       decorationMethods: json['decorationMethods'] as List<dynamic>,
+      pricingTiers:
+          (json['pricingTiers'] as List<dynamic>?)
+              ?.map((e) => PricingTierModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
@@ -59,12 +65,40 @@ Map<String, dynamic> _$ProductDetailsModelToJson(
   'minimumOrderQuantity': instance.minimumOrderQuantity,
   'standardProductionDays': instance.standardProductionDays,
   'rushProductionDays': instance.rushProductionDays,
+  'basePrice': instance.basePrice,
   'isActive': instance.isActive,
   'categories': instance.categories,
   'variants': instance.variants,
   'images': instance.images,
   'placementAreas': instance.placementAreas,
   'decorationMethods': instance.decorationMethods,
+  'pricingTiers': instance.pricingTiers,
   'createdAt': instance.createdAt?.toIso8601String(),
   'updatedAt': instance.updatedAt?.toIso8601String(),
 };
+
+PricingTierModel _$PricingTierModelFromJson(Map<String, dynamic> json) =>
+    PricingTierModel(
+      pricingTierId: (json['pricingTierId'] as num).toInt(),
+      tierName: json['tierName'] as String,
+      tierCode: json['tierCode'] as String,
+      minQuantity: (json['minQuantity'] as num).toInt(),
+      maxQuantity: (json['maxQuantity'] as num?)?.toInt(),
+      displayOrder: (json['displayOrder'] as num).toInt(),
+      customizationPrices:
+          (json['customizationPrices'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toDouble()),
+          ) ??
+          {},
+    );
+
+Map<String, dynamic> _$PricingTierModelToJson(PricingTierModel instance) =>
+    <String, dynamic>{
+      'pricingTierId': instance.pricingTierId,
+      'tierName': instance.tierName,
+      'tierCode': instance.tierCode,
+      'minQuantity': instance.minQuantity,
+      'maxQuantity': instance.maxQuantity,
+      'displayOrder': instance.displayOrder,
+      'customizationPrices': instance.customizationPrices,
+    };

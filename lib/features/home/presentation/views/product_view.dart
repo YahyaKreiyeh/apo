@@ -262,170 +262,266 @@ class _ProductContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenWidth = DeviceUtility.getScreenWidth(context);
+    final isWideLayout = screenWidth >= 900;
     final imageUrl = product.images.isNotEmpty
         ? product.images.first.imageUrl
         : Constants.getPlaceHolderImage(10);
-    final selectedVariant = _findSelectedVariant(product, selectedVariantId);
-    final price =
-        selectedVariant?.basePrice ?? _findBasePrice(product.variants);
     final inStock = product.isStockItem;
     final categoryNames = product.categories
         .map((category) => category.categoryName ?? '')
         .where((name) => name.isNotEmpty)
         .toList();
+    final priceRange = _findPricingRange(product);
+    final variantPriceOverride = product.basePrice > 0
+        ? product.basePrice
+        : null;
+    final imageCard = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: AspectRatio(
+          aspectRatio: 1.1,
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (_, _) => ShimmerPlaceholder(),
+            errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+          ),
+        ),
+      ),
+    );
+    final detailsColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(product.productName, style: TextStyles.text24500),
+        VerticalSpace(4),
+        Text(
+          product.productSKU,
+          style: TextStyles.text14400.copyWith(
+            color: theme.colorScheme.secondaryText,
+          ),
+        ),
+        if (priceRange != null) ...[
+          VerticalSpace(8),
+          Text(
+            priceRange.min == priceRange.max
+                ? '\$${priceRange.min.toStringAsFixed(2)}'
+                : '\$${priceRange.min.toStringAsFixed(2)} - \$${priceRange.max.toStringAsFixed(2)}',
+            style: TextStyles.text24500.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ],
+        VerticalSpace(12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _InfoChip(
+              label: inStock ? AppStrings.inStock : AppStrings.outOfStock,
+            ),
+            if (product.hasVariants || product.variants.length > 1)
+              _InfoChip(label: AppStrings.multipleVariants),
+            if (product.hasCustomization)
+              _InfoChip(label: AppStrings.customization),
+            if (product.isUSAMade) _InfoChip(label: AppStrings.usaMade),
+            if (product.model3DUrl.isNotEmpty)
+              _InfoChip(label: AppStrings.model3d),
+          ],
+        ),
+        VerticalSpace(16),
+        _SectionHeader(title: AppStrings.descriptionTitle),
+        VerticalSpace(8),
+        Text(product.description, style: TextStyles.text14400),
+        if (categoryNames.isNotEmpty) ...[
+          VerticalSpace(16),
+          _SectionHeader(title: AppStrings.categories),
+          VerticalSpace(8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: categoryNames
+                .map((name) => _TagChip(label: name))
+                .toList(),
+          ),
+        ],
+        if (product.pricingTiers.isNotEmpty) ...[
+          VerticalSpace(16),
+          _SectionHeader(title: AppStrings.pricingInformation),
+          VerticalSpace(8),
+          _PricingTable(tiers: product.pricingTiers),
+        ],
+        VerticalSpace(16),
+        _SectionHeader(title: AppStrings.productionInformation),
+        VerticalSpace(8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = (constraints.maxWidth - 12) / 2;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoTile(
+                    title: AppStrings.minimumOrder,
+                    value: '${product.minimumOrderQuantity} units',
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoTile(
+                    title: AppStrings.standardProduction,
+                    value: '${product.standardProductionDays} days',
+                  ),
+                ),
+                SizedBox(
+                  width: itemWidth,
+                  child: _InfoTile(
+                    title: AppStrings.rushProduction,
+                    value: '${product.rushProductionDays} days',
+                  ),
+                ),
+                if (product.manufacturingLocation.isNotEmpty)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _InfoTile(
+                      title: AppStrings.location,
+                      value: product.manufacturingLocation,
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        VerticalSpace(16),
+        if (product.variants.isNotEmpty) ...[
+          Text(AppStrings.variant),
+          VerticalSpace(12),
+          _VariantDropdown(
+            variants: product.variants,
+            selectedVariantId: selectedVariantId,
+            onChanged: onVariantChanged,
+            priceOverride: variantPriceOverride,
+          ),
+          VerticalSpace(12),
+        ],
+        Text(AppStrings.customizationType),
+        VerticalSpace(12),
+        const _CustomizationDropdown(),
+        VerticalSpace(12),
+        _QuantityPicker(
+          quantity: quantity,
+          onDecrease: onDecreaseQuantity,
+          onIncrease: onIncreaseQuantity,
+        ),
+        VerticalSpace(12),
+        _PersonalizationToggle(
+          value: hasPersonalization,
+          onChanged: onPersonalizationChanged,
+        ),
+      ],
+    );
+    final variantsSection = _VariantsSection(
+      variants: product.variants,
+      isWideLayout: isWideLayout,
+      priceOverride: variantPriceOverride,
+    );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(Constants.defaultPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CachedNetworkImage(
-            imageUrl: imageUrl,
-            height: DeviceUtility.getScreenWidth(context) * 0.8,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            placeholder: (_, _) => ShimmerPlaceholder(),
-            errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-          ),
-          VerticalSpace(16),
-          Text(product.productName, style: TextStyles.text17500),
-          VerticalSpace(4),
-          Text(
-            product.productSKU,
-            style: TextStyles.text14400.copyWith(
-              color: Theme.of(context).colorScheme.secondaryText,
-            ),
-          ),
-          if (price != null)
-            Text(
-              '\$${price.toStringAsFixed(0)}',
-              style: TextStyles.text28600.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          VerticalSpace(12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _InfoChip(
-                label: inStock ? AppStrings.inStock : AppStrings.outOfStock,
-              ),
-              if (product.hasVariants || product.variants.length > 1)
-                _InfoChip(label: AppStrings.multipleVariants),
-              if (product.hasCustomization)
-                _InfoChip(label: AppStrings.customization),
-              if (product.isUSAMade) _InfoChip(label: AppStrings.usaMade),
-              if (product.model3DUrl.isNotEmpty)
-                _InfoChip(label: AppStrings.model3d),
+          if (isWideLayout)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      imageCard,
+                      if (product.variants.isNotEmpty) ...[
+                        VerticalSpace(16),
+                        variantsSection,
+                      ],
+                    ],
+                  ),
+                ),
+                HorizontalSpace(24),
+                Expanded(flex: 4, child: detailsColumn),
+              ],
+            )
+          else ...[
+            imageCard,
+            if (product.variants.isNotEmpty) ...[
+              VerticalSpace(16),
+              variantsSection,
             ],
-          ),
-          VerticalSpace(12),
-          _SectionHeader(title: AppStrings.descriptionTitle),
-          VerticalSpace(8),
-          Text(product.description, style: TextStyles.text14400),
-          if (categoryNames.isNotEmpty) ...[
             VerticalSpace(16),
-            _SectionHeader(title: AppStrings.categories),
-            VerticalSpace(8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: categoryNames
-                  .map((name) => _TagChip(label: name))
-                  .toList(),
-            ),
+            detailsColumn,
           ],
-          if (product.variants.isNotEmpty) ...[
-            VerticalSpace(16),
-            _SectionHeader(title: AppStrings.availableVariants),
-            VerticalSpace(8),
-            Column(
-              children: product.variants
-                  .map(
-                    (variant) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _VariantCard(variant: variant),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          VerticalSpace(16),
-          _SectionHeader(title: AppStrings.productionInformation),
-          VerticalSpace(8),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final itemWidth = (constraints.maxWidth - 12) / 2;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoTile(
-                      title: AppStrings.minimumOrder,
-                      value: '${product.minimumOrderQuantity} units',
-                    ),
-                  ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoTile(
-                      title: AppStrings.standardProduction,
-                      value: '${product.standardProductionDays} days',
-                    ),
-                  ),
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoTile(
-                      title: AppStrings.rushProduction,
-                      value: '${product.rushProductionDays} days',
-                    ),
-                  ),
-                  if (product.manufacturingLocation.isNotEmpty)
-                    SizedBox(
-                      width: itemWidth,
-                      child: _InfoTile(
-                        title: AppStrings.location,
-                        value: product.manufacturingLocation,
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-          VerticalSpace(16),
-          if (product.variants.isNotEmpty) ...[
-            Text(AppStrings.variant),
-            VerticalSpace(12),
-            _VariantDropdown(
-              variants: product.variants,
-              selectedVariantId: selectedVariantId,
-              onChanged: onVariantChanged,
-            ),
-            VerticalSpace(12),
-          ],
-          _QuantityPicker(
-            quantity: quantity,
-            onDecrease: onDecreaseQuantity,
-            onIncrease: onIncreaseQuantity,
-          ),
-          VerticalSpace(12),
-          _PersonalizationToggle(
-            value: hasPersonalization,
-            onChanged: onPersonalizationChanged,
-          ),
           VerticalSpace(80),
         ],
       ),
     );
   }
+}
 
-  double? _findBasePrice(List<VariantEntity> variants) {
-    if (variants.isEmpty) return null;
-    final prices = variants.map((variant) => variant.basePrice).toList();
-    if (prices.isEmpty) return null;
-    prices.sort();
-    return prices.first;
+class _VariantsSection extends StatelessWidget {
+  final List<VariantEntity> variants;
+  final bool isWideLayout;
+  final double? priceOverride;
+
+  const _VariantsSection({
+    required this.variants,
+    required this.isWideLayout,
+    required this.priceOverride,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: AppStrings.availableVariants),
+        VerticalSpace(8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardWidth = isWideLayout ? 220.0 : constraints.maxWidth;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: variants
+                  .map(
+                    (variant) => SizedBox(
+                      width: cardWidth,
+                      child: _VariantCard(
+                        variant: variant,
+                        priceOverride: priceOverride,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            );
+          },
+        ),
+      ],
+    );
   }
 }
 
@@ -533,13 +629,15 @@ class _InfoTile extends StatelessWidget {
 
 class _VariantCard extends StatelessWidget {
   final VariantEntity variant;
+  final double? priceOverride;
 
-  const _VariantCard({required this.variant});
+  const _VariantCard({required this.variant, required this.priceOverride});
 
   @override
   Widget build(BuildContext context) {
     final sizeLabel = variant.sizeType?.sizeName ?? variant.sizeType?.sizeCode;
     final stockLabel = 'Stock: ${variant.inventoryAvailable}';
+    final price = priceOverride ?? variant.basePrice;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -575,7 +673,7 @@ class _VariantCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '\$${variant.basePrice.toStringAsFixed(0)}',
+                '\$${price.toStringAsFixed(2)}',
                 style: TextStyles.text14400.copyWith(
                   color: Theme.of(context).colorScheme.secondaryText,
                 ),
@@ -607,15 +705,105 @@ class _VariantCard extends StatelessWidget {
   }
 }
 
+class _PricingTable extends StatelessWidget {
+  final List<PricingTierEntity> tiers;
+
+  const _PricingTable({required this.tiers});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final sortedTiers = [...tiers]
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    final customizationKeys = _pricingCustomizationKeys(sortedTiers);
+    if (customizationKeys.isEmpty) return const SizedBox.shrink();
+    final key = customizationKeys.first;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colorScheme.outline),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder.symmetric(
+            inside: BorderSide(color: theme.colorScheme.outline),
+          ),
+          columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(1)},
+          children: [
+            TableRow(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer,
+              ),
+              children: [
+                _PricingCell(
+                  label: AppStrings.customizationType,
+                  isHeader: true,
+                  alignStart: true,
+                ),
+                _PricingCell(
+                  label: _formatCustomizationKey(key),
+                  isHeader: true,
+                ),
+              ],
+            ),
+            ...sortedTiers.map((tier) {
+              final price = tier.customizationPrices[key];
+              return TableRow(
+                children: [
+                  _PricingCell(label: tier.tierName, alignStart: true),
+                  _PricingCell(
+                    label: price == null
+                        ? '-'
+                        : '\$${price.toStringAsFixed(2)}',
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PricingCell extends StatelessWidget {
+  final String label;
+  final bool isHeader;
+  final bool alignStart;
+
+  const _PricingCell({
+    required this.label,
+    this.isHeader = false,
+    this.alignStart = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final alignment = alignStart ? Alignment.centerLeft : Alignment.center;
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Text(
+        label,
+        style: isHeader ? TextStyles.text14500 : TextStyles.text14400,
+      ),
+    );
+  }
+}
+
 class _VariantDropdown extends StatelessWidget {
   final List<VariantEntity> variants;
   final int? selectedVariantId;
   final ValueChanged<int?> onChanged;
+  final double? priceOverride;
 
   const _VariantDropdown({
     required this.variants,
     required this.selectedVariantId,
     required this.onChanged,
+    required this.priceOverride,
   });
 
   @override
@@ -644,7 +832,7 @@ class _VariantDropdown extends StatelessWidget {
             (variant) => DropdownMenuItem<int>(
               value: variant.variantId,
               child: Text(
-                _variantLabel(variant),
+                _variantLabel(variant, priceOverride: priceOverride),
                 style: TextStyles.text14400,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -652,6 +840,41 @@ class _VariantDropdown extends StatelessWidget {
           )
           .toList(),
       onChanged: onChanged,
+    );
+  }
+}
+
+class _CustomizationDropdown extends StatelessWidget {
+  const _CustomizationDropdown();
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: AppStrings.blank,
+      isExpanded: true,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.secondaryContainer,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      items: const [
+        DropdownMenuItem(
+          value: AppStrings.blank,
+          child: Text(AppStrings.blank),
+        ),
+        DropdownMenuItem(
+          value: AppStrings.selectCustomization,
+          child: Text(AppStrings.selectCustomization),
+        ),
+      ],
+      onChanged: (_) {},
     );
   }
 }
@@ -746,10 +969,61 @@ VariantEntity? _findSelectedVariant(
   );
 }
 
-String _variantLabel(VariantEntity variant) {
+_PriceRange? _findPricingRange(ProductDetailsEntity product) {
+  final tiers = product.pricingTiers;
+  if (tiers.isNotEmpty) {
+    final prices = tiers
+        .map((tier) => tier.customizationPrices['BLANK'])
+        .whereType<double>()
+        .toList();
+    if (prices.isNotEmpty) {
+      prices.sort();
+      return _PriceRange(prices.first, prices.last);
+    }
+  }
+  if (product.basePrice > 0) {
+    return _PriceRange(product.basePrice, product.basePrice);
+  }
+  final variantPrices = product.variants
+      .map((variant) => variant.basePrice)
+      .where((price) => price > 0)
+      .toList();
+  if (variantPrices.isEmpty) return null;
+  variantPrices.sort();
+  return _PriceRange(variantPrices.first, variantPrices.last);
+}
+
+String _variantLabel(VariantEntity variant, {double? priceOverride}) {
   final sizeLabel = variant.sizeType?.sizeName ?? variant.sizeType?.sizeCode;
   final baseLabel = sizeLabel == null
       ? variant.colorName
       : '${variant.colorName} • $sizeLabel';
-  return '$baseLabel • \$${variant.basePrice.toStringAsFixed(0)}';
+  final price = priceOverride ?? variant.basePrice;
+  return '$baseLabel • \$${price.toStringAsFixed(2)}';
+}
+
+List<String> _pricingCustomizationKeys(List<PricingTierEntity> tiers) {
+  final keys = <String>{};
+  for (final tier in tiers) {
+    keys.addAll(tier.customizationPrices.keys);
+  }
+  final list = keys.toList();
+  list.sort((a, b) {
+    if (a.toUpperCase() == 'BLANK') return -1;
+    if (b.toUpperCase() == 'BLANK') return 1;
+    return a.compareTo(b);
+  });
+  return list;
+}
+
+String _formatCustomizationKey(String key) {
+  if (key.toUpperCase() == 'BLANK') return AppStrings.blank;
+  return key[0].toUpperCase() + key.substring(1).toLowerCase();
+}
+
+class _PriceRange {
+  final double min;
+  final double max;
+
+  const _PriceRange(this.min, this.max);
 }

@@ -19,12 +19,15 @@ class ProductDetailsModel {
   final int minimumOrderQuantity;
   final int standardProductionDays;
   final int rushProductionDays;
+  final double basePrice;
   final bool isActive;
   final List<CategoryModel> categories;
   final List<VariantModel> variants;
   final List<ProductImageModel> images;
   final List<dynamic> placementAreas;
   final List<dynamic> decorationMethods;
+  @JsonKey(defaultValue: <PricingTierModel>[])
+  final List<PricingTierModel> pricingTiers;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -43,12 +46,14 @@ class ProductDetailsModel {
     required this.minimumOrderQuantity,
     required this.standardProductionDays,
     required this.rushProductionDays,
+    required this.basePrice,
     required this.isActive,
     required this.categories,
     required this.variants,
     required this.images,
     required this.placementAreas,
     required this.decorationMethods,
+    required this.pricingTiers,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,4 +62,31 @@ class ProductDetailsModel {
       _$ProductDetailsModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ProductDetailsModelToJson(this);
+}
+
+@JsonSerializable()
+class PricingTierModel {
+  final int pricingTierId;
+  final String tierName;
+  final String tierCode;
+  final int minQuantity;
+  final int? maxQuantity;
+  final int displayOrder;
+  @JsonKey(defaultValue: <String, double>{})
+  final Map<String, double> customizationPrices;
+
+  const PricingTierModel({
+    required this.pricingTierId,
+    required this.tierName,
+    required this.tierCode,
+    required this.minQuantity,
+    required this.maxQuantity,
+    required this.displayOrder,
+    required this.customizationPrices,
+  });
+
+  factory PricingTierModel.fromJson(Map<String, dynamic> json) =>
+      _$PricingTierModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PricingTierModelToJson(this);
 }

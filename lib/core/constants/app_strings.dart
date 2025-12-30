@@ -155,6 +155,10 @@ class AppStrings {
   static const String customization = 'Customization';
   static const String usaMade = 'USA Made';
   static const String model3d = '3D Model';
+  static const String pricingInformation = 'Pricing Information';
+  static const String customizationType = 'Customization Type';
+  static const String blank = 'Blank';
+  static const String selectCustomization = 'Select Customization';
   static const String productionNotes = 'Production Notes';
   static const String includeCustomEmbroideryPersonalization =
       'Include custom embroidery/personalization';
