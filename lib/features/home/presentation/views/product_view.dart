@@ -22,9 +22,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProductView extends StatelessWidget {
   const ProductView({super.key});
+
+  static final Uri _decorateUrl = Uri.parse(
+    'https://wordpress2.skyfy.me/source/productViwer3/',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +90,25 @@ class ProductView extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        final launched = await launchUrl(
+                          _decorateUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
+                        if (!launched) {
+                          AppToast.show(
+                            message: AppStrings.unknownError,
+                            type: AppToastType.error,
+                          );
+                        }
+                      },
+                      child: const Text('Decorate'),
+                    ),
+                  ),
+                  VerticalSpace(10),
                   SizedBox(
                     width: double.infinity,
                     child: BlocBuilder<CartCubit, CartState>(
