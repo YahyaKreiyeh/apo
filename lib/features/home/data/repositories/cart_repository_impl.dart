@@ -34,6 +34,13 @@ class CartRepositoryImpl extends BaseRepository implements CartRepository {
   }
 
   @override
+  Future<ApiResponseModel<void>> deleteCartItem({required int cartItemId}) {
+    return executeVoidApiCall(
+      apiCall: () async => await _apiService.deleteCartItem(cartItemId),
+    );
+  }
+
+  @override
   Future<ApiResponseModel<void>> clearCart() {
     return executeVoidApiCall(
       apiCall: () async => await _apiService.clearCart(),

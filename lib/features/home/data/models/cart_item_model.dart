@@ -11,6 +11,8 @@ class CartItemModel {
   final String variantSKU;
   final String colorName;
   final String sizeName;
+  final int? customizationTypeId;
+  final String? customizationTypeName;
   final num unitPrice;
   final int quantity;
   final num lineTotal;
@@ -25,6 +27,8 @@ class CartItemModel {
     required this.variantSKU,
     required this.colorName,
     required this.sizeName,
+    required this.customizationTypeId,
+    required this.customizationTypeName,
     required this.unitPrice,
     required this.quantity,
     required this.lineTotal,

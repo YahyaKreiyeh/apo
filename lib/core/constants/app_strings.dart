@@ -35,6 +35,11 @@ class AppStrings {
   static const String orderDetails = 'Order Details';
   static const String orderItems = 'Items';
   static const String orderSummary = 'Order Summary';
+  static const String itemsLabel = 'Items';
+  static const String estimatedSubtotal = 'Estimated Subtotal';
+  static const String totalEstimated = 'Total (Est.)';
+  static const String orderSummaryNote =
+      'Final pricing will be provided in your custom quote based on quantity, customization, and shipping.';
   static const String shippingAddressTitle = 'Shipping Address';
   static const String billingAddressTitle = 'Billing Address';
   static const String reorder = 'Reorder';

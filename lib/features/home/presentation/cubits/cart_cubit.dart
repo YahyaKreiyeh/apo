@@ -11,16 +11,21 @@ import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/domain/models/product_details_entity.dart';
 import 'package:apo/features/home/domain/models/product_entity.dart';
 import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
+import 'package:apo/features/home/domain/usecases/delete_cart_item_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
-  CartCubit(this._addCartItemUseCase, this._getCartItemsUseCase)
-    : super(const CartState());
+  CartCubit(
+    this._addCartItemUseCase,
+    this._getCartItemsUseCase,
+    this._deleteCartItemUseCase,
+  ) : super(const CartState());
 
   final AddCartItemUseCase _addCartItemUseCase;
   final GetCartItemsUseCase _getCartItemsUseCase;
+  final DeleteCartItemUseCase _deleteCartItemUseCase;
 
   Future<ApiResponseModel<List<CartItemEntity>>> loadCart() async {
     if (state.cartStatus.isLoading) {
@@ -116,14 +121,22 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     if (existingIndex == -1) {
       updatedItems.add(
         CartItemEntity(
+          cartItemId: 0,
           productId: product.productId,
           variantId: variantId,
           name: product.productName,
           productSku: product.productSKU,
+          variantSku: resolvedVariant?.variantSKU ?? '',
+          colorName: resolvedVariant?.colorName ?? '',
+          sizeName: resolvedVariant?.sizeType?.sizeName ?? '',
+          customizationTypeId: null,
+          customizationTypeName: null,
           unitPrice: resolvedVariant?.basePrice,
+          lineTotal: null,
           imageUrl: imageUrl,
           quantity: safeQuantity,
           hasPersonalization: hasPersonalization,
+          addedAt: null,
         ),
       );
     } else {
@@ -154,14 +167,31 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     unawaited(_persistLocalCartIfGuest(updatedItems));
   }
 
-  void removeItem(int productId, int variantId) {
-    final updatedItems = state.items
-        .where(
-          (item) => item.productId != productId || item.variantId != variantId,
-        )
-        .toList();
+  Future<void> removeItem(CartItemEntity item) async {
+    final updatedItems = state.items.where((entry) {
+      if (item.cartItemId > 0 && entry.cartItemId > 0) {
+        return entry.cartItemId != item.cartItemId;
+      }
+      return entry.productId != item.productId ||
+          entry.variantId != item.variantId;
+    }).toList();
     safeEmit(state.copyWith(items: updatedItems));
-    unawaited(_persistLocalCartIfGuest(updatedItems));
+    final isAuthenticated = await _isAuthenticated();
+    if (!isAuthenticated) {
+      unawaited(_persistLocalCartIfGuest(updatedItems));
+      return;
+    }
+    if (item.cartItemId <= 0) {
+      await loadCart();
+      return;
+    }
+    final response = await _deleteCartItemUseCase(
+      cartItemId: item.cartItemId,
+    );
+    response.when(
+      success: (_) => unawaited(loadCart()),
+      failure: (_) => unawaited(loadCart()),
+    );
   }
 
   void updateQuantity(int productId, int variantId, int quantity) {
@@ -263,27 +293,45 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
 
   CartItemEntity _cartItemFromJson(Map<String, dynamic> json) {
     return CartItemEntity(
+      cartItemId: (json['cartItemId'] as num?)?.toInt() ?? 0,
       productId: (json['productId'] as num?)?.toInt() ?? 0,
       variantId: (json['variantId'] as num?)?.toInt() ?? 0,
       name: (json['name'] as String?) ?? '',
       productSku: (json['productSku'] as String?) ?? '',
+      variantSku: (json['variantSku'] as String?) ?? '',
+      colorName: (json['colorName'] as String?) ?? '',
+      sizeName: (json['sizeName'] as String?) ?? '',
+      customizationTypeId: (json['customizationTypeId'] as num?)?.toInt(),
+      customizationTypeName: json['customizationTypeName'] as String?,
       unitPrice: (json['unitPrice'] as num?)?.toDouble(),
+      lineTotal: (json['lineTotal'] as num?)?.toDouble(),
       imageUrl: (json['imageUrl'] as String?) ?? '',
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
       hasPersonalization: (json['hasPersonalization'] as bool?) ?? false,
+      addedAt: json['addedAt'] == null
+          ? null
+          : DateTime.tryParse(json['addedAt'] as String),
     );
   }
 
   Map<String, dynamic> _cartItemToJson(CartItemEntity item) {
     return {
+      'cartItemId': item.cartItemId,
       'productId': item.productId,
       'variantId': item.variantId,
       'name': item.name,
       'productSku': item.productSku,
+      'variantSku': item.variantSku,
+      'colorName': item.colorName,
+      'sizeName': item.sizeName,
+      'customizationTypeId': item.customizationTypeId,
+      'customizationTypeName': item.customizationTypeName,
       'unitPrice': item.unitPrice,
+      'lineTotal': item.lineTotal,
       'imageUrl': item.imageUrl,
       'quantity': item.quantity,
       'hasPersonalization': item.hasPersonalization,
+      'addedAt': item.addedAt?.toIso8601String(),
     };
   }
 }

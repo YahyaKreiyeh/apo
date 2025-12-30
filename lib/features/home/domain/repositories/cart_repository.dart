@@ -9,5 +9,7 @@ abstract class CartRepository {
 
   Future<ApiResponseModel<List<CartItemEntity>>> getCartItems();
 
+  Future<ApiResponseModel<void>> deleteCartItem({required int cartItemId});
+
   Future<ApiResponseModel<void>> clearCart();
 }
