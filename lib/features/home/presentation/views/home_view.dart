@@ -5,6 +5,7 @@ import 'package:apo/core/constants/theme_constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
 import 'package:apo/core/models/result.dart';
 import 'package:apo/core/routing/route_names.dart';
+import 'package:apo/core/style/assets/assets.gen.dart';
 import 'package:apo/core/themes/app_colors.dart';
 import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
@@ -139,6 +140,7 @@ class _HomeViewState extends State<HomeView> {
                     enlargeStrategy: CenterPageEnlargeStrategy.height,
                     viewportFraction: 1,
                     autoPlay: true,
+                    enableInfiniteScroll: false,
                   ),
                   items: [10, 20, 30].map((ad) {
                     return Padding(
@@ -149,13 +151,14 @@ class _HomeViewState extends State<HomeView> {
                         borderRadius: BorderRadius.circular(
                           Constants.adsBannerRadius,
                         ),
-                        child: CachedNetworkImage(
-                          imageUrl: Constants.getPlaceHolderImage(ad),
-                          fit: BoxFit.fill,
-                          width: double.infinity,
-                          placeholder: (_, _) => ShimmerPlaceholder(),
-                          errorWidget: (_, _, _) => NetworkImagePlaceholder(),
-                        ),
+                        child: Assets.images.banner.image(fit: BoxFit.fill),
+                        // CachedNetworkImage(
+                        //   imageUrl: Constants.getPlaceHolderImage(ad),
+                        //   fit: BoxFit.fill,
+                        //   width: double.infinity,
+                        //   placeholder: (_, _) => ShimmerPlaceholder(),
+                        //   errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                        // ),
                       ),
                     );
                   }).toList(),

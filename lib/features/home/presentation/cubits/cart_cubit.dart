@@ -1,57 +1,75 @@
 import 'package:apo/core/mixins/cubit_mixin.dart';
+import 'package:apo/core/models/api_response_model.dart';
+import 'package:apo/core/models/result.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/domain/models/product_details_entity.dart';
+import 'package:apo/features/home/domain/models/product_entity.dart';
+import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
+import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
-  CartCubit() : super(const CartState());
+  CartCubit(this._addCartItemUseCase, this._getCartItemsUseCase)
+    : super(const CartState());
 
-  void addProduct(
+  final AddCartItemUseCase _addCartItemUseCase;
+  final GetCartItemsUseCase _getCartItemsUseCase;
+
+  Future<ApiResponseModel<List<CartItemEntity>>> loadCart() async {
+    if (state.cartStatus.isLoading) {
+      return const ApiResponseModel.success([]);
+    }
+    safeEmit(state.copyWith(cartStatus: const Result.loading()));
+    final response = await _getCartItemsUseCase();
+    response.when(
+      success: (items) => safeEmit(
+        state.copyWith(
+          items: items,
+          cartStatus: const Result.success(data: null),
+        ),
+      ),
+      failure: (apiError) =>
+          safeEmit(state.copyWith(cartStatus: Result.failure(error: apiError))),
+    );
+    return response;
+  }
+
+  Future<ApiResponseModel<void>> addProduct(
     ProductDetailsEntity product, {
     int quantity = 1,
     bool hasPersonalization = false,
-  }) {
-    final safeQuantity = quantity < 1 ? 1 : quantity;
-    final variantId =
-        product.variants.isNotEmpty ? product.variants.first.variantId : 0;
-    final existingIndex = state.items.indexWhere(
-      (item) =>
-          item.productId == product.productId &&
-          item.variantId == variantId &&
-          item.hasPersonalization == hasPersonalization,
-    );
-    final imageUrl = product.images.isNotEmpty
-        ? product.images.first.imageUrl
-        : '';
-    final unitPrice = product.variants.isNotEmpty
-        ? product.variants.first.basePrice
-        : null;
-
-    if (existingIndex == -1) {
-      final updatedItems = [
-        ...state.items,
-        CartItemEntity(
-          productId: product.productId,
-          variantId: variantId,
-          name: product.productName,
-          productSku: product.productSKU,
-          unitPrice: unitPrice,
-          imageUrl: imageUrl,
-          quantity: safeQuantity,
-          hasPersonalization: hasPersonalization,
-        ),
-      ];
-      safeEmit(state.copyWith(items: updatedItems));
-      return;
+    VariantEntity? selectedVariant,
+  }) async {
+    if (state.addStatus.isLoading) {
+      return const ApiResponseModel.success(null);
     }
-
-    final existing = state.items[existingIndex];
-    final updatedItems = [...state.items];
-    updatedItems[existingIndex] = existing.copyWith(
-      quantity: existing.quantity + safeQuantity,
+    safeEmit(state.copyWith(addStatus: const Result.loading()));
+    final safeQuantity = quantity < 1 ? 1 : quantity;
+    final resolvedVariant =
+        selectedVariant ??
+        (product.variants.isNotEmpty ? product.variants.first : null);
+    final variantId = resolvedVariant?.variantId ?? 0;
+    final response = await _addCartItemUseCase(
+      variantId: variantId,
+      quantity: safeQuantity,
     );
-    safeEmit(state.copyWith(items: updatedItems));
+    safeEmit(
+      state.copyWith(
+        addStatus: response.when(
+          success: (_) => const Result.success(data: null),
+          failure: (apiError) => Result.failure(error: apiError),
+        ),
+      ),
+    );
+    final isSuccess = response.when(
+      success: (_) => true,
+      failure: (_) => false,
+    );
+    if (isSuccess) {
+      await loadCart();
+    }
+    return response;
   }
 
   void removeProduct(int productId) {
@@ -64,39 +82,47 @@ class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
     );
   }
 
-  void removeItem(int productId, int variantId, bool hasPersonalization) {
+  void removeItem(int productId, int variantId) {
     safeEmit(
       state.copyWith(
         items: state.items
             .where(
               (item) =>
-                  item.productId != productId ||
-                  item.variantId != variantId ||
-                  item.hasPersonalization != hasPersonalization,
+                  item.productId != productId || item.variantId != variantId,
             )
             .toList(),
       ),
     );
   }
 
-  void updateQuantity(
-    int productId,
-    int variantId,
-    bool hasPersonalization,
-    int quantity,
-  ) {
+  void updateQuantity(int productId, int variantId, int quantity) {
     final safeQuantity = quantity < 1 ? 1 : quantity;
     final index = state.items.indexWhere(
-      (item) =>
-          item.productId == productId &&
-          item.variantId == variantId &&
-          item.hasPersonalization == hasPersonalization,
+      (item) => item.productId == productId && item.variantId == variantId,
     );
     if (index == -1) {
       return;
     }
     final updatedItems = [...state.items];
     updatedItems[index] = updatedItems[index].copyWith(quantity: safeQuantity);
+    safeEmit(state.copyWith(items: updatedItems));
+  }
+
+  void updatePersonalization(
+    int productId,
+    int variantId,
+    bool hasPersonalization,
+  ) {
+    final index = state.items.indexWhere(
+      (item) => item.productId == productId && item.variantId == variantId,
+    );
+    if (index == -1) {
+      return;
+    }
+    final updatedItems = [...state.items];
+    updatedItems[index] = updatedItems[index].copyWith(
+      hasPersonalization: hasPersonalization,
+    );
     safeEmit(state.copyWith(items: updatedItems));
   }
 

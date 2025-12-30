@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CartState {
 
- List<CartItemEntity> get items;
+ List<CartItemEntity> get items; Result<void> get addStatus; Result<void> get cartStatus;
 /// Create a copy of CartState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CartStateCopyWith<CartState> get copyWith => _$CartStateCopyWithImpl<CartState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CartState&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CartState&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.addStatus, addStatus) || other.addStatus == addStatus)&&(identical(other.cartStatus, cartStatus) || other.cartStatus == cartStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),addStatus,cartStatus);
 
 @override
 String toString() {
-  return 'CartState(items: $items)';
+  return 'CartState(items: $items, addStatus: $addStatus, cartStatus: $cartStatus)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $CartStateCopyWith<$Res>  {
   factory $CartStateCopyWith(CartState value, $Res Function(CartState) _then) = _$CartStateCopyWithImpl;
 @useResult
 $Res call({
- List<CartItemEntity> items
+ List<CartItemEntity> items, Result<void> addStatus, Result<void> cartStatus
 });
 
 
-
+$ResultCopyWith<void, $Res> get addStatus;$ResultCopyWith<void, $Res> get cartStatus;
 
 }
 /// @nodoc
@@ -62,13 +62,33 @@ class _$CartStateCopyWithImpl<$Res>
 
 /// Create a copy of CartState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? addStatus = null,Object? cartStatus = null,}) {
   return _then(_self.copyWith(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<CartItemEntity>,
+as List<CartItemEntity>,addStatus: null == addStatus ? _self.addStatus : addStatus // ignore: cast_nullable_to_non_nullable
+as Result<void>,cartStatus: null == cartStatus ? _self.cartStatus : cartStatus // ignore: cast_nullable_to_non_nullable
+as Result<void>,
   ));
 }
-
+/// Create a copy of CartState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResultCopyWith<void, $Res> get addStatus {
+  
+  return $ResultCopyWith<void, $Res>(_self.addStatus, (value) {
+    return _then(_self.copyWith(addStatus: value));
+  });
+}/// Create a copy of CartState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResultCopyWith<void, $Res> get cartStatus {
+  
+  return $ResultCopyWith<void, $Res>(_self.cartStatus, (value) {
+    return _then(_self.copyWith(cartStatus: value));
+  });
+}
 }
 
 
@@ -150,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<CartItemEntity> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<CartItemEntity> items,  Result<void> addStatus,  Result<void> cartStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CartState() when $default != null:
-return $default(_that.items);case _:
+return $default(_that.items,_that.addStatus,_that.cartStatus);case _:
   return orElse();
 
 }
@@ -171,10 +191,10 @@ return $default(_that.items);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<CartItemEntity> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<CartItemEntity> items,  Result<void> addStatus,  Result<void> cartStatus)  $default,) {final _that = this;
 switch (_that) {
 case _CartState():
-return $default(_that.items);case _:
+return $default(_that.items,_that.addStatus,_that.cartStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -191,10 +211,10 @@ return $default(_that.items);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<CartItemEntity> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<CartItemEntity> items,  Result<void> addStatus,  Result<void> cartStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _CartState() when $default != null:
-return $default(_that.items);case _:
+return $default(_that.items,_that.addStatus,_that.cartStatus);case _:
   return null;
 
 }
@@ -206,7 +226,7 @@ return $default(_that.items);case _:
 
 
 class _CartState implements CartState {
-  const _CartState({final  List<CartItemEntity> items = const []}): _items = items;
+  const _CartState({final  List<CartItemEntity> items = const [], this.addStatus = const Result.empty(), this.cartStatus = const Result.empty()}): _items = items;
   
 
  final  List<CartItemEntity> _items;
@@ -216,6 +236,8 @@ class _CartState implements CartState {
   return EqualUnmodifiableListView(_items);
 }
 
+@override@JsonKey() final  Result<void> addStatus;
+@override@JsonKey() final  Result<void> cartStatus;
 
 /// Create a copy of CartState
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +249,16 @@ _$CartStateCopyWith<_CartState> get copyWith => __$CartStateCopyWithImpl<_CartSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CartState&&const DeepCollectionEquality().equals(other._items, _items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CartState&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.addStatus, addStatus) || other.addStatus == addStatus)&&(identical(other.cartStatus, cartStatus) || other.cartStatus == cartStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),addStatus,cartStatus);
 
 @override
 String toString() {
-  return 'CartState(items: $items)';
+  return 'CartState(items: $items, addStatus: $addStatus, cartStatus: $cartStatus)';
 }
 
 
@@ -247,11 +269,11 @@ abstract mixin class _$CartStateCopyWith<$Res> implements $CartStateCopyWith<$Re
   factory _$CartStateCopyWith(_CartState value, $Res Function(_CartState) _then) = __$CartStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<CartItemEntity> items
+ List<CartItemEntity> items, Result<void> addStatus, Result<void> cartStatus
 });
 
 
-
+@override $ResultCopyWith<void, $Res> get addStatus;@override $ResultCopyWith<void, $Res> get cartStatus;
 
 }
 /// @nodoc
@@ -264,14 +286,34 @@ class __$CartStateCopyWithImpl<$Res>
 
 /// Create a copy of CartState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? addStatus = null,Object? cartStatus = null,}) {
   return _then(_CartState(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<CartItemEntity>,
+as List<CartItemEntity>,addStatus: null == addStatus ? _self.addStatus : addStatus // ignore: cast_nullable_to_non_nullable
+as Result<void>,cartStatus: null == cartStatus ? _self.cartStatus : cartStatus // ignore: cast_nullable_to_non_nullable
+as Result<void>,
   ));
 }
 
-
+/// Create a copy of CartState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResultCopyWith<void, $Res> get addStatus {
+  
+  return $ResultCopyWith<void, $Res>(_self.addStatus, (value) {
+    return _then(_self.copyWith(addStatus: value));
+  });
+}/// Create a copy of CartState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResultCopyWith<void, $Res> get cartStatus {
+  
+  return $ResultCopyWith<void, $Res>(_self.cartStatus, (value) {
+    return _then(_self.copyWith(cartStatus: value));
+  });
+}
 }
 
 // dart format on

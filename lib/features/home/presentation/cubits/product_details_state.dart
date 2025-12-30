@@ -10,5 +10,6 @@ abstract class ProductDetailsState with _$ProductDetailsState {
     @Default(Result.empty()) Result<ProductDetailsEntity> status,
     @Default(1) int quantity,
     @Default(false) bool hasPersonalization,
+    int? selectedVariantId,
   }) = _ProductDetailsState;
 }

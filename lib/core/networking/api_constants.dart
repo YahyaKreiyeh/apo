@@ -10,6 +10,8 @@ class ApiConstants {
   static const String transfers = 'transfers';
   static const String transferTypeDetails = 'masters/TRANSFER_TYPE/details';
   static const String sheetTypeDetails = 'masters/SHEET_TYPE/details';
+  static const String cartItems = 'cart/items';
+  static const String cart = 'cart';
 }
 
 class ApiErrors {

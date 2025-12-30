@@ -45,11 +45,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               final transferContent = switch (state.transfersStatus) {
                 Loading() => Row(
                   children: [
-                    const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    CircularProgressIndicator(),
                     HorizontalSpace(12),
                     Expanded(
                       child: Text(
@@ -384,15 +380,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                           ),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: isSubmitting ? null : handleSubmit,
+                              onPressed: isSubmitting ? () {} : handleSubmit,
                               child: isSubmitting
-                                  ? const SizedBox(
-                                      height: 18,
-                                      width: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
+                                  ? CircularProgressIndicator()
                                   : Text(AppStrings.save),
                             ),
                           ),

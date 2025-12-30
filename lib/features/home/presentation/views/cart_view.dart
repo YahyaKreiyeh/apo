@@ -78,7 +78,7 @@ class CartView extends StatelessWidget {
               final item = state.items[index];
               return Dismissible(
                 key: ValueKey(
-                  '${item.productId}-${item.variantId}-${item.hasPersonalization}',
+                  '${item.productId}-${item.variantId}',
                 ),
                 background: _DismissBackground(
                   alignment: Alignment.centerLeft,
@@ -88,11 +88,9 @@ class CartView extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   icon: Icons.delete_outline,
                 ),
-                onDismissed: (_) => context.read<CartCubit>().removeItem(
-                  item.productId,
-                  item.variantId,
-                  item.hasPersonalization,
-                ),
+                onDismissed: (_) => context
+                    .read<CartCubit>()
+                    .removeItem(item.productId, item.variantId),
                 child: Container(
                   padding: const EdgeInsets.all(Constants.defaultPadding),
                   decoration: BoxDecoration(
@@ -177,22 +175,20 @@ class CartView extends StatelessWidget {
                           HorizontalSpace(12),
                           _QuantityStepper(
                             quantity: item.quantity,
-                            onDecrease: item.quantity > 1
-                                ? () =>
-                                      context.read<CartCubit>().updateQuantity(
-                                        item.productId,
-                                        item.variantId,
-                                        item.hasPersonalization,
-                                        item.quantity - 1,
-                                      )
-                                : null,
-                            onIncrease: () =>
-                                context.read<CartCubit>().updateQuantity(
-                                  item.productId,
-                                  item.variantId,
-                                  item.hasPersonalization,
-                                  item.quantity + 1,
-                                ),
+                                    onDecrease: item.quantity > 1
+                                        ? () =>
+                                              context.read<CartCubit>().updateQuantity(
+                                                item.productId,
+                                                item.variantId,
+                                                item.quantity - 1,
+                                              )
+                                        : null,
+                                    onIncrease: () =>
+                                        context.read<CartCubit>().updateQuantity(
+                                          item.productId,
+                                          item.variantId,
+                                          item.quantity + 1,
+                                        ),
                           ),
                           const Spacer(),
                           Column(
@@ -220,46 +216,62 @@ class CartView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (item.hasPersonalization) ...[
-                        VerticalSpace(12),
-                        Divider(
-                          height: 1,
-                          color: Theme.of(context).colorScheme.outlineVariant,
+                      VerticalSpace(12),
+                      Divider(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      VerticalSpace(8),
+                      CheckboxListTile(
+                        value: item.hasPersonalization,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          AppStrings.includeCustomEmbroideryPersonalization,
+                          style: TextStyles.text14400,
                         ),
-                        VerticalSpace(12),
-                        Text(
-                          '${AppStrings.productionNotes} ${AppStrings.optional}',
-                          style: TextStyles.text14400.copyWith(
-                            color: Theme.of(context).colorScheme.secondaryText,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (value) => context
+                            .read<CartCubit>()
+                            .updatePersonalization(
+                              item.productId,
+                              item.variantId,
+                              value ?? false,
+                            ),
+                      ),
+                      VerticalSpace(8),
+                      Text(
+                        '${AppStrings.productionNotes} ${AppStrings.optional}',
+                        style: TextStyles.text14400.copyWith(
+                          color: Theme.of(context).colorScheme.secondaryText,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextField(
+                        onTapOutside: (_) =>
+                            FocusManager.instance.primaryFocus?.unfocus(),
+                        decoration: InputDecoration(
+                          hintText: AppStrings
+                              .logoPlacementThreadColorsSpecialInstructions,
+                          hintMaxLines: 2,
+                          filled: true,
+                          fillColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            ),
                           ),
                         ),
-                        VerticalSpace(8),
-                        TextField(
-                          onTapOutside: (_) =>
-                              FocusManager.instance.primaryFocus?.unfocus(),
-                          decoration: InputDecoration(
-                            hintText: AppStrings
-                                .logoPlacementThreadColorsSpecialInstructions,
-                            hintMaxLines: 2,
-                            filled: true,
-                            fillColor: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outlineVariant,
-                              ),
-                            ),
-                          ),
-                          textInputAction: TextInputAction.done,
-                        ),
-                      ],
+                        textInputAction: TextInputAction.done,
+                      ),
                     ],
                   ),
                 ),

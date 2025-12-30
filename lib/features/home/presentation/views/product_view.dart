@@ -30,97 +30,124 @@ class ProductView extends StatelessWidget {
     return BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
       builder: (context, state) {
         final product = state.status.successValue;
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            actionsPadding: EdgeInsets.only(right: 8),
-            actions: [
-              IconButton.filled(
-                onPressed: () {},
-                icon: Icon(Icons.favorite_outline),
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.secondaryContainer.withValues(
-                    alpha: 0.5,
-                  ),
-                ),
-              ),
-              BlocBuilder<CartCubit, CartState>(
-                builder: (context, cartState) {
-                  return IconButton.filled(
-                    onPressed: () => context.goNamed(RouteNames.cart.name),
-                    icon: _CartBadgeIcon(count: cartState.totalItems),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.secondaryContainer.withValues(
-                        alpha: 0.5,
-                      ),
+        return BlocListener<CartCubit, CartState>(
+          listenWhen: (previous, current) =>
+              previous.addStatus != current.addStatus,
+          listener: (context, cartState) {
+            if (cartState.addStatus.isSuccess) {
+              AppToast.show(
+                message: AppStrings.addedToCart,
+                type: AppToastType.success,
+              );
+            }
+            if (cartState.addStatus.isFailure) {
+              AppToast.show(
+                message: cartState.addStatus.failureMessage,
+                type: AppToastType.error,
+              );
+            }
+          },
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              actionsPadding: EdgeInsets.only(right: 8),
+              actions: [
+                IconButton.filled(
+                  onPressed: () {},
+                  icon: Icon(Icons.favorite_outline),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.secondaryContainer.withValues(
+                      alpha: 0.5,
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-          bottomNavigationBar: SafeArea(
-            minimum: const EdgeInsets.all(Constants.defaultPadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _PersonalizationToggle(
-                  value: state.hasPersonalization,
-                  onChanged: (value) => context
-                      .read<ProductDetailsCubit>()
-                      .setHasPersonalization(value),
-                ),
-                VerticalSpace(12),
-                _QuantityPicker(
-                  quantity: state.quantity,
-                  onDecrease: () =>
-                      context.read<ProductDetailsCubit>().decreaseQuantity(),
-                  onIncrease: () =>
-                      context.read<ProductDetailsCubit>().increaseQuantity(),
-                ),
-                VerticalSpace(12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: product == null
-                        ? null
-                        : () {
-                            context.read<CartCubit>().addProduct(
-                              product,
-                              quantity: state.quantity,
-                              hasPersonalization: state.hasPersonalization,
-                            );
-                            AppToast.show(
-                              message: AppStrings.addedToCart,
-                              type: AppToastType.success,
-                            );
-                          },
-                    child: Text(AppStrings.addToCart),
                   ),
+                ),
+                BlocBuilder<CartCubit, CartState>(
+                  builder: (context, cartState) {
+                    return IconButton.filled(
+                      onPressed: () => context.goNamed(RouteNames.cart.name),
+                      icon: _CartBadgeIcon(count: cartState.totalItems),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.secondaryContainer
+                            .withValues(alpha: 0.5),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
-          ),
-          body: Builder(
-            builder: (context) {
-              if (state.status.isLoading) {
-                return const _ProductLoading();
-              }
-              if (state.status.isFailure) {
-                return _ProductError(
-                  message: state.status.failureMessage,
-                  onRetry: () => context.read<ProductDetailsCubit>().load(),
+            bottomNavigationBar: SafeArea(
+              minimum: const EdgeInsets.all(Constants.defaultPadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: BlocBuilder<CartCubit, CartState>(
+                      builder: (context, cartState) {
+                        return ElevatedButton(
+                          onPressed: product == null
+                              ? null
+                              : cartState.addStatus.isLoading
+                              ? () {}
+                              : () async {
+                                  final selectedVariant = _findSelectedVariant(
+                                    product,
+                                    state.selectedVariantId,
+                                  );
+                                  await context.read<CartCubit>().addProduct(
+                                    product,
+                                    quantity: state.quantity,
+                                    hasPersonalization:
+                                        state.hasPersonalization,
+                                    selectedVariant: selectedVariant,
+                                  );
+                                },
+                          child: cartState.addStatus.isLoading
+                              ? CircularProgressIndicator()
+                              : Text(AppStrings.addToCart),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            body: Builder(
+              builder: (context) {
+                if (state.status.isLoading) {
+                  return const _ProductLoading();
+                }
+                if (state.status.isFailure) {
+                  return _ProductError(
+                    message: state.status.failureMessage,
+                    onRetry: () => context.read<ProductDetailsCubit>().load(),
+                  );
+                }
+                if (product == null) {
+                  return _ProductError(
+                    message: AppStrings.unknownError,
+                    onRetry: () => context.read<ProductDetailsCubit>().load(),
+                  );
+                }
+                return _ProductContent(
+                  product: product,
+                  quantity: state.quantity,
+                  hasPersonalization: state.hasPersonalization,
+                  onPersonalizationChanged: (value) => context
+                      .read<ProductDetailsCubit>()
+                      .setHasPersonalization(value),
+                  onIncreaseQuantity: () =>
+                      context.read<ProductDetailsCubit>().increaseQuantity(),
+                  onDecreaseQuantity: () =>
+                      context.read<ProductDetailsCubit>().decreaseQuantity(),
+                  selectedVariantId: state.selectedVariantId,
+                  onVariantChanged: (variantId) => context
+                      .read<ProductDetailsCubit>()
+                      .setSelectedVariant(variantId),
                 );
-              }
-              if (product == null) {
-                return _ProductError(
-                  message: AppStrings.unknownError,
-                  onRetry: () => context.read<ProductDetailsCubit>().load(),
-                );
-              }
-              return _ProductContent(product: product);
-            },
+              },
+            ),
           ),
         );
       },
@@ -199,15 +226,33 @@ class _ProductError extends StatelessWidget {
 
 class _ProductContent extends StatelessWidget {
   final ProductDetailsEntity product;
+  final int quantity;
+  final bool hasPersonalization;
+  final ValueChanged<bool> onPersonalizationChanged;
+  final VoidCallback onIncreaseQuantity;
+  final VoidCallback onDecreaseQuantity;
+  final int? selectedVariantId;
+  final ValueChanged<int?> onVariantChanged;
 
-  const _ProductContent({required this.product});
+  const _ProductContent({
+    required this.product,
+    required this.quantity,
+    required this.hasPersonalization,
+    required this.onPersonalizationChanged,
+    required this.onIncreaseQuantity,
+    required this.onDecreaseQuantity,
+    required this.selectedVariantId,
+    required this.onVariantChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final imageUrl = product.images.isNotEmpty
         ? product.images.first.imageUrl
         : Constants.getPlaceHolderImage(10);
-    final price = _findBasePrice(product.variants);
+    final selectedVariant = _findSelectedVariant(product, selectedVariantId);
+    final price =
+        selectedVariant?.basePrice ?? _findBasePrice(product.variants);
     final inStock = product.isStockItem;
     final categoryNames = product.categories
         .map((category) => category.categoryName ?? '')
@@ -332,6 +377,27 @@ class _ProductContent extends StatelessWidget {
                 ],
               );
             },
+          ),
+          VerticalSpace(16),
+          if (product.variants.isNotEmpty) ...[
+            Text(AppStrings.variant),
+            VerticalSpace(12),
+            _VariantDropdown(
+              variants: product.variants,
+              selectedVariantId: selectedVariantId,
+              onChanged: onVariantChanged,
+            ),
+            VerticalSpace(12),
+          ],
+          _QuantityPicker(
+            quantity: quantity,
+            onDecrease: onDecreaseQuantity,
+            onIncrease: onIncreaseQuantity,
+          ),
+          VerticalSpace(12),
+          _PersonalizationToggle(
+            value: hasPersonalization,
+            onChanged: onPersonalizationChanged,
           ),
           VerticalSpace(80),
         ],
@@ -526,6 +592,55 @@ class _VariantCard extends StatelessWidget {
   }
 }
 
+class _VariantDropdown extends StatelessWidget {
+  final List<VariantEntity> variants;
+  final int? selectedVariantId;
+  final ValueChanged<int?> onChanged;
+
+  const _VariantDropdown({
+    required this.variants,
+    required this.selectedVariantId,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedSelectedId =
+        selectedVariantId ??
+        (variants.isNotEmpty ? variants.first.variantId : null);
+    return DropdownButtonFormField<int>(
+      initialValue: resolvedSelectedId,
+      isExpanded: true,
+      decoration: InputDecoration(
+        hintText: AppStrings.selectVariant,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.secondaryContainer,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      items: variants
+          .map(
+            (variant) => DropdownMenuItem<int>(
+              value: variant.variantId,
+              child: Text(
+                _variantLabel(variant),
+                style: TextStyles.text14400,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
+          .toList(),
+      onChanged: onChanged,
+    );
+  }
+}
+
 class _QuantityPicker extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrease;
@@ -602,4 +717,24 @@ class _PersonalizationToggle extends StatelessWidget {
       ),
     );
   }
+}
+
+VariantEntity? _findSelectedVariant(
+  ProductDetailsEntity product,
+  int? variantId,
+) {
+  if (product.variants.isEmpty) return null;
+  if (variantId == null) return product.variants.first;
+  return product.variants.firstWhere(
+    (variant) => variant.variantId == variantId,
+    orElse: () => product.variants.first,
+  );
+}
+
+String _variantLabel(VariantEntity variant) {
+  final sizeLabel = variant.sizeType?.sizeName ?? variant.sizeType?.sizeCode;
+  final baseLabel = sizeLabel == null
+      ? variant.colorName
+      : '${variant.colorName} • $sizeLabel';
+  return '$baseLabel • \$${variant.basePrice.toStringAsFixed(0)}';
 }

@@ -18,9 +18,14 @@ import 'package:apo/features/checkout/domain/usecases/get_transfer_selections_us
 import 'package:apo/features/checkout/domain/usecases/request_quote_usecase.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_cubit.dart';
 import 'package:apo/features/home/data/repositories/products_repository_impl.dart';
+import 'package:apo/features/home/data/repositories/cart_repository_impl.dart';
+import 'package:apo/features/home/data/services/cart_api_service.dart';
 import 'package:apo/features/home/data/services/products_api_service.dart';
+import 'package:apo/features/home/domain/repositories/cart_repository.dart';
 import 'package:apo/features/home/domain/repositories/products_repository.dart';
+import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
 import 'package:apo/features/home/domain/usecases/checkout_usecase.dart';
+import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
@@ -50,7 +55,12 @@ Future<void> setupGetIt() async {
 
   getIt.registerFactory(() => LoginCubit(getIt<LoginUseCase>()));
   getIt.registerFactory(() => ProductsCubit(getIt<GetProductsUseCase>()));
-  getIt.registerLazySingleton<CartCubit>(() => CartCubit());
+  getIt.registerLazySingleton<CartCubit>(
+    () => CartCubit(
+      getIt<AddCartItemUseCase>(),
+      getIt<GetCartItemsUseCase>(),
+    ),
+  );
   getIt.registerLazySingleton<ProfileCubit>(() => ProfileCubit());
   getIt.registerFactoryParam<ProductDetailsCubit, int, void>(
     (productId, _) => ProductDetailsCubit(
@@ -76,6 +86,12 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<GetProductsUseCase>(
     () => GetProductsUseCase(getIt<ProductsRepository>()),
+  );
+  getIt.registerLazySingleton<AddCartItemUseCase>(
+    () => AddCartItemUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<GetCartItemsUseCase>(
+    () => GetCartItemsUseCase(getIt<CartRepository>()),
   );
   getIt.registerLazySingleton<RequestQuoteUseCase>(
     () => RequestQuoteUseCase(getIt<CheckoutRepository>()),
@@ -109,6 +125,9 @@ Future<void> setupGetIt() async {
   getIt.registerLazySingleton<ProductsRepository>(
     () => ProductsRepositoryImpl(getIt<ProductsApiService>()),
   );
+  getIt.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(getIt<CartApiService>()),
+  );
 
   getIt.registerLazySingleton<CheckoutRepository>(
     () => CheckoutRepositoryImpl(getIt<CheckoutApiService>()),
@@ -119,6 +138,9 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<ProductsApiService>(
     () => ProductsApiService(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<CartApiService>(
+    () => CartApiService(getIt<Dio>()),
   );
   getIt.registerLazySingleton<CheckoutApiService>(
     () => CheckoutApiService(getIt<Dio>()),

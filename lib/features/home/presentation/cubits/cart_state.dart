@@ -1,3 +1,4 @@
+import 'package:apo/core/models/result.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -7,6 +8,8 @@ part 'cart_state.freezed.dart';
 abstract class CartState with _$CartState {
   const factory CartState({
     @Default([]) List<CartItemEntity> items,
+    @Default(Result.empty()) Result<void> addStatus,
+    @Default(Result.empty()) Result<void> cartStatus,
   }) = _CartState;
 }
 
