@@ -6,6 +6,7 @@ class ApiConstants {
   static const String products = 'products';
   static const String quoteRequests = 'quote-requests';
   static const String checkout = 'jobs/checkout';
+  static const String jobs = 'jobs';
   static const String shipViaDetails = 'masters/SHIP_VIA/details';
   static const String transfers = 'transfers';
   static const String transferTypeDetails = 'masters/TRANSFER_TYPE/details';

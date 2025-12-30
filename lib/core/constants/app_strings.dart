@@ -25,6 +25,12 @@ class AppStrings {
   static const String product = 'Product';
   static const String addToCart = 'Add to cart';
   static const String cart = 'Cart';
+  static const String orders = 'Orders';
+  static const String ordersSubtitle = 'Your recent orders and job history';
+  static const String refresh = 'Refresh';
+  static const String noOrdersFound = 'No orders found';
+  static const String ordersLoginRequired =
+      'Orders are available for logged in users only.';
   static const String cartEmpty = 'Your cart is empty';
   static const String continueShopping = 'Continue Shopping';
   static const String checkout = 'Checkout';

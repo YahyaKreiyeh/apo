@@ -9,6 +9,7 @@ import 'package:apo/features/dashboard/views/dashboard_view.dart';
 import 'package:apo/features/dashboard/widgets/bottom_nav_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/orders_cubit.dart';
 import 'package:apo/features/home/presentation/views/cart_view.dart';
 import 'package:apo/features/home/presentation/views/home_view.dart';
 import 'package:apo/features/home/presentation/views/orders_view.dart';
@@ -118,7 +119,10 @@ final _bottomNavRoutes = [
           GoRoute(
             name: RouteNames.orders.name,
             path: RouteNames.orders.path,
-            builder: (context, state) => OrdersView(),
+            builder: (context, state) => BlocProvider(
+              create: (context) => getIt<OrdersCubit>(),
+              child: OrdersView(),
+            ),
           ),
         ],
       ),

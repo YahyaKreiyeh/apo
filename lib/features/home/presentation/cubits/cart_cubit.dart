@@ -11,21 +11,16 @@ import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/domain/models/product_details_entity.dart';
 import 'package:apo/features/home/domain/models/product_entity.dart';
 import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
-import 'package:apo/features/home/domain/usecases/clear_cart_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CartCubit extends Cubit<CartState> with SafeEmitter<CartState> {
-  CartCubit(
-    this._addCartItemUseCase,
-    this._getCartItemsUseCase,
-    this._clearCartUseCase,
-  ) : super(const CartState());
+  CartCubit(this._addCartItemUseCase, this._getCartItemsUseCase)
+    : super(const CartState());
 
   final AddCartItemUseCase _addCartItemUseCase;
   final GetCartItemsUseCase _getCartItemsUseCase;
-  final ClearCartUseCase _clearCartUseCase;
 
   Future<ApiResponseModel<List<CartItemEntity>>> loadCart() async {
     if (state.cartStatus.isLoading) {

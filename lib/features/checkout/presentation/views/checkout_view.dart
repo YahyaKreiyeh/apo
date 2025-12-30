@@ -15,6 +15,7 @@ import 'package:apo/features/checkout/presentation/cubits/checkout_cubit.dart';
 import 'package:apo/features/checkout/presentation/cubits/checkout_state.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -430,7 +431,11 @@ class _CheckoutViewState extends State<CheckoutView> {
 
   void _handleStatus(BuildContext context, CheckoutState state) {
     if (state.status.isSuccess) {
-      if (state.type == CheckoutType.requestQuote) {
+      final isAuthenticated =
+          context.read<ProfileCubit>().state.isAuthenticated;
+      if (isAuthenticated) {
+        unawaited(context.read<CartCubit>().loadCart());
+      } else if (state.type == CheckoutType.requestQuote) {
         unawaited(context.read<CartCubit>().clearCart());
       } else {
         context.read<CartCubit>().clear();
