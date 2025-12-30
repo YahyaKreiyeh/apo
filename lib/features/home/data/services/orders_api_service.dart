@@ -16,4 +16,7 @@ abstract class OrdersApiService {
 
   @GET('${ApiConstants.jobs}/{id}')
   Future<BaseApiResponse<JobDetailModel>> getOrder(@Path('id') int id);
+
+  @POST('${ApiConstants.jobs}/{id}/reorder')
+  Future<BaseApiResponse<JobDetailModel>> reorder(@Path('id') int id);
 }

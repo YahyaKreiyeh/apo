@@ -21,12 +21,30 @@ class OrderDetailsView extends StatelessWidget {
     return BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
       builder: (context, state) {
         final status = state.status;
+        final isReordering = state.reorderStatus.isLoading;
+        final canReorder = status is Success<OrderDetailEntity>;
         return Scaffold(
           appBar: AppBar(
             title: Text(
               status.successValue?.jobNumber ?? AppStrings.orderDetails,
             ),
           ),
+          bottomNavigationBar: canReorder
+              ? SafeArea(
+                  minimum: const EdgeInsets.all(Constants.defaultPadding),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isReordering
+                          ? () {}
+                          : () => context.read<OrderDetailsCubit>().reorder(),
+                      child: isReordering
+                          ? const CircularProgressIndicator()
+                          : Text(AppStrings.reorder),
+                    ),
+                  ),
+                )
+              : null,
           body: switch (status) {
             Loading() => const _OrderDetailsLoading(),
             Failure() => Center(

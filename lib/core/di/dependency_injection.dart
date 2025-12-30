@@ -34,6 +34,7 @@ import 'package:apo/features/home/domain/usecases/get_order_details_usecase.dart
 import 'package:apo/features/home/domain/usecases/get_orders_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
+import 'package:apo/features/home/domain/usecases/reorder_order_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/order_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/orders_cubit.dart';
@@ -67,6 +68,7 @@ Future<void> setupGetIt() async {
   getIt.registerFactoryParam<OrderDetailsCubit, int, void>(
     (orderId, _) => OrderDetailsCubit(
       getIt<GetOrderDetailsUseCase>(),
+      getIt<ReorderOrderUseCase>(),
       orderId: orderId,
     ),
   );
@@ -113,6 +115,9 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<GetOrderDetailsUseCase>(
     () => GetOrderDetailsUseCase(getIt<OrdersRepository>()),
+  );
+  getIt.registerLazySingleton<ReorderOrderUseCase>(
+    () => ReorderOrderUseCase(getIt<OrdersRepository>()),
   );
   getIt.registerLazySingleton<RequestQuoteUseCase>(
     () => RequestQuoteUseCase(getIt<CheckoutRepository>()),

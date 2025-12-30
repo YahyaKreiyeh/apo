@@ -36,6 +36,7 @@ class AppStrings {
   static const String orderSummary = 'Order Summary';
   static const String shippingAddressTitle = 'Shipping Address';
   static const String billingAddressTitle = 'Billing Address';
+  static const String reorder = 'Reorder';
   static const String cartEmpty = 'Your cart is empty';
   static const String continueShopping = 'Continue Shopping';
   static const String checkout = 'Checkout';

@@ -6,4 +6,6 @@ abstract class OrdersRepository {
   Future<ApiResponseModel<List<OrderEntity>>> getOrders();
 
   Future<ApiResponseModel<OrderDetailEntity>> getOrder(int id);
+
+  Future<ApiResponseModel<OrderDetailEntity>> reorder(int id);
 }

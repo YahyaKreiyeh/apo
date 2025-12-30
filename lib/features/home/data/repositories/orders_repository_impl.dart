@@ -33,4 +33,12 @@ class OrdersRepositoryImpl extends BaseRepository implements OrdersRepository {
       mapper: (response) => response.data.toEntity(),
     );
   }
+
+  @override
+  Future<ApiResponseModel<OrderDetailEntity>> reorder(int id) {
+    return executeApiCall<OrderDetailEntity, BaseApiResponse<JobDetailModel>>(
+      apiCall: () => _apiService.reorder(id),
+      mapper: (response) => response.data.toEntity(),
+    );
+  }
 }
