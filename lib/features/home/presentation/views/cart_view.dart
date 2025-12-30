@@ -32,6 +32,13 @@ class CartView extends StatelessWidget {
           if (state.items.isEmpty) {
             return const SizedBox.shrink();
           }
+          final primaryActionType = isAuthenticated
+              ? CheckoutType.checkout
+              : CheckoutType.requestQuote;
+          final primaryActionLabel = isAuthenticated
+              ? AppStrings.checkout
+              : AppStrings.requestQuote;
+
           return SafeArea(
             minimum: const EdgeInsets.all(Constants.defaultPadding),
             child: Column(
@@ -55,9 +62,9 @@ class CartView extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () => context.pushNamed(
                     RouteNames.checkout.name,
-                    extra: CheckoutType.checkout,
+                    extra: primaryActionType,
                   ),
-                  child: Text(AppStrings.checkout),
+                  child: Text(primaryActionLabel),
                 ),
               ],
             ),

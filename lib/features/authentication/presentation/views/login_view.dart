@@ -6,6 +6,7 @@ import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/widgets/app_toast.dart';
 import 'package:apo/features/authentication/presentation/cubits/login_cubit.dart';
 import 'package:apo/features/authentication/presentation/cubits/login_state.dart';
+import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,7 @@ class LoginView extends StatelessWidget {
           },
           success: (data) {
             context.read<ProfileCubit>().loadAuthStatus();
+            context.read<CartCubit>().loadCart();
             context.pop();
           },
         );
