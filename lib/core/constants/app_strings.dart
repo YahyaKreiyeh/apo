@@ -31,6 +31,11 @@ class AppStrings {
   static const String noOrdersFound = 'No orders found';
   static const String ordersLoginRequired =
       'Orders are available for logged in users only.';
+  static const String orderDetails = 'Order Details';
+  static const String orderItems = 'Items';
+  static const String orderSummary = 'Order Summary';
+  static const String shippingAddressTitle = 'Shipping Address';
+  static const String billingAddressTitle = 'Billing Address';
   static const String cartEmpty = 'Your cart is empty';
   static const String continueShopping = 'Continue Shopping';
   static const String checkout = 'Checkout';
@@ -67,7 +72,6 @@ class AppStrings {
   static const String cityHint = 'New York';
   static const String stateHint = 'NY';
   static const String zipCodeHint = '10001';
-  static const String orderDetails = 'Order Details';
   static const String additionalNotesOptional = 'Additional Notes (Optional)';
   static const String additionalNotesHint =
       'Any special requirements or questions?';

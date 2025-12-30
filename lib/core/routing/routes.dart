@@ -10,8 +10,10 @@ import 'package:apo/features/dashboard/widgets/bottom_nav_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/orders_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/order_details_cubit.dart';
 import 'package:apo/features/home/presentation/views/cart_view.dart';
 import 'package:apo/features/home/presentation/views/home_view.dart';
+import 'package:apo/features/home/presentation/views/order_details_view.dart';
 import 'package:apo/features/home/presentation/views/orders_view.dart';
 import 'package:apo/features/home/presentation/views/product_view.dart';
 import 'package:apo/features/home/presentation/views/profile_view.dart';
@@ -141,6 +143,18 @@ final _bottomNavRoutes = [
 ];
 
 final _appRoutes = [
+  GoRoute(
+    path: RouteNames.orderDetails.path,
+    name: RouteNames.orderDetails.name,
+    builder: (context, state) {
+      final idParam = state.pathParameters['id'] ?? '0';
+      final orderId = int.tryParse(idParam) ?? 0;
+      return BlocProvider(
+        create: (context) => getIt<OrderDetailsCubit>(param1: orderId),
+        child: const OrderDetailsView(),
+      );
+    },
+  ),
   GoRoute(
     path: RouteNames.checkout.path,
     name: RouteNames.checkout.name,

@@ -12,6 +12,8 @@ import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/profile_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:apo/core/routing/route_names.dart';
 
 class OrdersView extends StatelessWidget {
   const OrdersView({super.key});
@@ -110,7 +112,14 @@ class OrdersView extends StatelessWidget {
                           separatorBuilder: (_, _) => VerticalSpace(12),
                           itemBuilder: (context, index) {
                             final order = state.items[index];
-                            return _OrderCard(order: order);
+                            return InkWell(
+                              onTap: () => context.pushNamed(
+                                RouteNames.orderDetails.name,
+                                pathParameters: {'id': order.jobId.toString()},
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              child: _OrderCard(order: order),
+                            );
                           },
                         ),
                       ),

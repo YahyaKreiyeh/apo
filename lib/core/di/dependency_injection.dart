@@ -30,10 +30,12 @@ import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
 import 'package:apo/features/home/domain/usecases/checkout_usecase.dart';
 import 'package:apo/features/home/domain/usecases/clear_cart_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
+import 'package:apo/features/home/domain/usecases/get_order_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_orders_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
+import 'package:apo/features/home/presentation/cubits/order_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/orders_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/product_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/products_cubit.dart';
@@ -62,6 +64,12 @@ Future<void> setupGetIt() async {
   getIt.registerFactory(() => LoginCubit(getIt<LoginUseCase>()));
   getIt.registerFactory(() => ProductsCubit(getIt<GetProductsUseCase>()));
   getIt.registerFactory(() => OrdersCubit(getIt<GetOrdersUseCase>()));
+  getIt.registerFactoryParam<OrderDetailsCubit, int, void>(
+    (orderId, _) => OrderDetailsCubit(
+      getIt<GetOrderDetailsUseCase>(),
+      orderId: orderId,
+    ),
+  );
   getIt.registerLazySingleton<CartCubit>(
     () => CartCubit(getIt<AddCartItemUseCase>(), getIt<GetCartItemsUseCase>()),
   );
@@ -102,6 +110,9 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<GetOrdersUseCase>(
     () => GetOrdersUseCase(getIt<OrdersRepository>()),
+  );
+  getIt.registerLazySingleton<GetOrderDetailsUseCase>(
+    () => GetOrderDetailsUseCase(getIt<OrdersRepository>()),
   );
   getIt.registerLazySingleton<RequestQuoteUseCase>(
     () => RequestQuoteUseCase(getIt<CheckoutRepository>()),

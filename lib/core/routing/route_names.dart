@@ -3,6 +3,7 @@ enum RouteNames {
   home('home', '/home'),
   cart('cart', '/cart'),
   orders('orders', '/orders'),
+  orderDetails('orderDetails', '/orders/:id'),
   profile('profile', '/profile'),
   product('product', '/product/:id'),
   checkout('checkout', '/checkout'),
