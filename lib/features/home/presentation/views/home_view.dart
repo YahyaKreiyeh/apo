@@ -77,7 +77,6 @@ class _HomeViewState extends State<HomeView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppStrings.hello, style: TextStyles.text28600),
                     Text(
                       AppStrings.welcomeToApploEmb,
                       style: TextStyles.text15400.copyWith(
