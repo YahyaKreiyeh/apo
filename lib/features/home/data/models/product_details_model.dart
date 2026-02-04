@@ -9,22 +9,32 @@ class ProductDetailsModel {
   final String productSKU;
   final String productName;
   final String description;
+  @JsonKey(defaultValue: '')
   final String model3DUrl;
+  @JsonKey(defaultValue: '')
   final String model3DThumbnail;
+  @JsonKey(defaultValue: false)
   final bool hasVariants;
+  @JsonKey(defaultValue: false)
   final bool hasCustomization;
   final bool isStockItem;
   final bool isUSAMade;
+  @JsonKey(defaultValue: '')
   final String manufacturingLocation;
   final int minimumOrderQuantity;
+  @JsonKey(defaultValue: 0)
   final int standardProductionDays;
+  @JsonKey(defaultValue: 0)
   final int rushProductionDays;
   final double basePrice;
   final bool isActive;
+  @JsonKey(defaultValue: <CategoryModel>[])
   final List<CategoryModel> categories;
+  @JsonKey(defaultValue: <VariantModel>[])
   final List<VariantModel> variants;
+  @JsonKey(defaultValue: <ProductImageModel>[])
   final List<ProductImageModel> images;
-  final List<dynamic> placementAreas;
+  @JsonKey(defaultValue: <dynamic>[])
   final List<dynamic> decorationMethods;
   @JsonKey(defaultValue: <PricingTierModel>[])
   final List<PricingTierModel> pricingTiers;
@@ -51,7 +61,6 @@ class ProductDetailsModel {
     required this.categories,
     required this.variants,
     required this.images,
-    required this.placementAreas,
     required this.decorationMethods,
     required this.pricingTiers,
     required this.createdAt,

@@ -239,9 +239,7 @@ class _HomeViewState extends State<HomeView> {
                         return _ProductCardPlaceholder();
                       }
                       final product = state.items[index];
-                      final imageUrl =
-                          product.mainImage?.imageUrl ??
-                          Constants.getPlaceHolderImage((index + 1) * 10);
+                      final imageUrl = product.images.first.imageUrl;
                       final displayPrice =
                           product.priceRange?.min ??
                           (product.basePrice > 0 ? product.basePrice : null);

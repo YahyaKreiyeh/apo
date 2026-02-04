@@ -11,6 +11,24 @@ class ApiConstants {
   static const String transfers = 'transfers';
   static const String transferTypeDetails = 'masters/TRANSFER_TYPE/details';
   static const String sheetTypeDetails = 'masters/SHEET_TYPE/details';
+  static const String decorationTypeDetails =
+      'masters/DECORATION_TYPE/details';
+  static const String heatTransferTypeDetails =
+      'masters/HEAT_TRANSFER_TYPE/details';
+  static const String screenPrintColorsDetails =
+      'masters/SCREEN_PRINT_COLORS/details';
+  static const String screenPrintGarmentDetails =
+      'masters/SCREEN_PRINT_GARMENT/details';
+  static const String screenPrintLocationDetails =
+      'masters/SCREEN_PRINT_LOCATION/details';
+  static const String leatherColorDetails =
+      'masters/LEATHER_COLOR/details';
+  static const String patchTypeDetails =
+      'masters/PATCHES_TYPE/details';
+  static const String labelTypeDetails =
+      'masters/LABELS_TYPE/details';
+  static const String embOptionsDetails = 'masters/EMB_OPTIONS/details';
+  static const String embTypeDetails = 'masters/EMB_TYPE/details';
   static const String cartItems = 'cart/items';
   static const String cart = 'cart';
 }

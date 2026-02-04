@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:apo/core/constants/app_strings.dart';
 import 'package:apo/core/constants/constants.dart';
 import 'package:apo/core/helpers/spacing.dart';
@@ -11,16 +14,2076 @@ import 'package:apo/core/widgets/network_image_placeholder.dart';
 import 'package:apo/core/widgets/shimmer_placeholder.dart';
 import 'package:apo/features/checkout/checkout_type.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
+import 'package:apo/features/home/domain/models/master_detail_type.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/cart_state.dart';
 import 'package:apo/features/home/presentation/cubits/profile_cubit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CartView extends StatelessWidget {
   const CartView({super.key});
+
+  Future<void> _showDecorationDialog(
+    BuildContext context,
+    CartItemEntity item,
+  ) async {
+    final cubit = context.read<CartCubit>();
+    final imagePicker = ImagePicker();
+    if (cubit.state.decorationTypeOptions.isEmpty &&
+        !cubit.state.decorationTypeStatus.isLoading) {
+      unawaited(cubit.fetchDecorationTypeOptions());
+    }
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final colorScheme = Theme.of(dialogContext).colorScheme;
+        final selectedDecorationId = ValueNotifier<int?>(null);
+        return BlocProvider.value(
+          value: cubit,
+          child: BlocBuilder<CartCubit, CartState>(
+            builder: (context, state) {
+              final itemKey = '${item.productId}-${item.variantId}';
+              final decorations = state.decorationsByItem[itemKey] ?? const [];
+
+              Widget buildDecorationDropdown(
+                void Function(void Function()) setState,
+              ) {
+                if (state.decorationTypeOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noDecorationTypes,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedDecorationId.value,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectDecorationType,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.decorationTypeOptions
+                      .where(
+                        (option) => option.detailCode.toUpperCase() != 'BLANK',
+                      )
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => selectedDecorationId.value = value),
+                );
+              }
+
+              Widget buildEmbOptionsDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.embOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noEmbOptions,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectEmbOption,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.embOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildEmbTypesDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.embTypes.isEmpty) {
+                  return Text(
+                    AppStrings.noEmbTypes,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectEmbType,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.embTypes
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildEmbOptionsContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.embOptionsStatus.when(
+                  empty: () => buildEmbOptionsDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildEmbOptionsDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingEmbOptions,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.embOptionsStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchEmbOptions,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildEmbTypesContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.embTypesStatus.when(
+                  empty: () => buildEmbTypesDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildEmbTypesDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingEmbTypes,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.embTypesStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchEmbTypes,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildHeatTransferTypeDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.heatTransferTypeOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noHeatTransferTypes,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectHeatTransferType,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.heatTransferTypeOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildHeatTransferTypeContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.heatTransferTypeStatus.when(
+                  empty: () => buildHeatTransferTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildHeatTransferTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingHeatTransferTypes,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.heatTransferTypeStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchHeatTransferTypes,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              String formatInchesValue(double? value) {
+                if (value == null) {
+                  return '';
+                }
+                if (value % 1 == 0) {
+                  return value.toStringAsFixed(0);
+                }
+                return value.toString();
+              }
+
+              Widget buildHeatTransferInchesField({
+                required String label,
+                required String hintText,
+                required String initialValue,
+                required ValueChanged<String> onChanged,
+              }) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyles.text14400.copyWith(
+                        color: colorScheme.secondaryText,
+                      ),
+                    ),
+                    VerticalSpace(6),
+                    TextFormField(
+                      initialValue: initialValue,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      textInputAction: TextInputAction.next,
+                      onChanged: onChanged,
+                      onTapOutside: (_) =>
+                          FocusManager.instance.primaryFocus?.unfocus(),
+                      decoration: InputDecoration(
+                        hintText: hintText,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.secondaryContainer,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              Widget buildScreenPrintColorDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.screenPrintColorOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noScreenPrintColors,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectScreenPrintColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.screenPrintColorOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildScreenPrintGarmentDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.screenPrintGarmentOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noScreenPrintGarments,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectScreenPrintGarment,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.screenPrintGarmentOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildScreenPrintLocationDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.screenPrintLocationOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noScreenPrintLocations,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectScreenPrintLocation,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.screenPrintLocationOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildScreenPrintColorContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.screenPrintColorStatus.when(
+                  empty: () => buildScreenPrintColorDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildScreenPrintColorDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingScreenPrintColors,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.screenPrintColorStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchScreenPrintColors,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildScreenPrintGarmentContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.screenPrintGarmentStatus.when(
+                  empty: () => buildScreenPrintGarmentDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildScreenPrintGarmentDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingScreenPrintGarments,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.screenPrintGarmentStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchScreenPrintGarments,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildScreenPrintLocationContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.screenPrintLocationStatus.when(
+                  empty: () => buildScreenPrintLocationDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildScreenPrintLocationDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingScreenPrintLocations,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.screenPrintLocationStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchScreenPrintLocations,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildLeatherColorDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.leatherColorOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noLeatherColors,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectLeatherColor,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.leatherColorOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildLeatherColorContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.leatherColorStatus.when(
+                  empty: () => buildLeatherColorDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildLeatherColorDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingLeatherColors,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.leatherColorStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchLeatherColors,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildPatchTypeDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.patchTypeOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noPatchTypes,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectPatchType,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.patchTypeOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildPatchTypeContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.patchTypeStatus.when(
+                  empty: () => buildPatchTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildPatchTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingPatchTypes,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.patchTypeStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchPatchTypes,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Widget buildLabelTypeDropdown({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                if (state.labelTypeOptions.isEmpty) {
+                  return Text(
+                    AppStrings.noLabelTypes,
+                    style: TextStyles.text14400.copyWith(
+                      color: colorScheme.secondaryText,
+                    ),
+                  );
+                }
+                return DropdownButtonFormField<int>(
+                  initialValue: selectedId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: AppStrings.selectLabelType,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: state.labelTypeOptions
+                      .map(
+                        (option) => DropdownMenuItem<int>(
+                          value: option.id,
+                          child: Text(
+                            option.detailName,
+                            style: TextStyles.text14400,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: onChanged,
+                );
+              }
+
+              Widget buildLabelTypeContent({
+                required int? selectedId,
+                required ValueChanged<int?> onChanged,
+              }) {
+                return state.labelTypeStatus.when(
+                  empty: () => buildLabelTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  success: (_) => buildLabelTypeDropdown(
+                    selectedId: selectedId,
+                    onChanged: onChanged,
+                  ),
+                  loading: () => Row(
+                    children: [
+                      const CircularProgressIndicator(),
+                      HorizontalSpace(12),
+                      Expanded(
+                        child: Text(
+                          AppStrings.loadingLabelTypes,
+                          style: TextStyles.text14400.copyWith(
+                            color: colorScheme.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  failure: (_, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.labelTypeStatus.failureMessage,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      TextButton.icon(
+                        onPressed: cubit.fetchLabelTypes,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              Future<void> pickDecorationImage(int index) async {
+                final selected = await imagePicker.pickImage(
+                  source: ImageSource.gallery,
+                  imageQuality: 85,
+                );
+                if (selected == null) return;
+                cubit.updateDecorationImagePath(
+                  item.productId,
+                  item.variantId,
+                  index,
+                  selected.path,
+                );
+              }
+
+              Widget buildDecorationImagePreview(String imagePath) {
+                if (kIsWeb) {
+                  return Image.network(imagePath, fit: BoxFit.cover);
+                }
+                return Image.file(File(imagePath), fit: BoxFit.cover);
+              }
+
+              Widget buildDecorationImageSection({
+                required int index,
+                required String? imagePath,
+              }) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.image_outlined,
+                          size: 18,
+                          color: colorScheme.primary,
+                        ),
+                        HorizontalSpace(8),
+                        Text(
+                          AppStrings.decorationImageLabel,
+                          style: TextStyles.text14400,
+                        ),
+                      ],
+                    ),
+                    VerticalSpace(10),
+                    if (imagePath == null)
+                      OutlinedButton.icon(
+                        onPressed: () => pickDecorationImage(index),
+                        icon: const Icon(Icons.upload_outlined),
+                        label: Text(AppStrings.uploadImage),
+                      )
+                    else ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 140,
+                          width: double.infinity,
+                          color: colorScheme.surfaceContainerHighest,
+                          child: buildDecorationImagePreview(imagePath),
+                        ),
+                      ),
+                      VerticalSpace(8),
+                      OutlinedButton.icon(
+                        onPressed: () => pickDecorationImage(index),
+                        icon: const Icon(Icons.refresh),
+                        label: Text(AppStrings.changeImage),
+                      ),
+                      VerticalSpace(8),
+                      OutlinedButton.icon(
+                        onPressed: () => cubit.updateDecorationImagePath(
+                          item.productId,
+                          item.variantId,
+                          index,
+                          null,
+                        ),
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(AppStrings.removeImage),
+                      ),
+                    ],
+                  ],
+                );
+              }
+
+              final decorationContent = state.decorationTypeStatus.when(
+                empty: () => const SizedBox.shrink(),
+                success: (_) => const SizedBox.shrink(),
+                loading: () => Row(
+                  children: [
+                    const CircularProgressIndicator(),
+                    HorizontalSpace(12),
+                    Expanded(
+                      child: Text(
+                        AppStrings.loadingDecorations,
+                        style: TextStyles.text14400.copyWith(
+                          color: colorScheme.secondaryText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                failure: (_, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      state.decorationTypeStatus.failureMessage,
+                      style: TextStyles.text14400.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    VerticalSpace(8),
+                    TextButton.icon(
+                      onPressed: cubit.fetchDecorationTypeOptions,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(AppStrings.retry),
+                    ),
+                  ],
+                ),
+              );
+              return AlertDialog(
+                scrollable: true,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(AppStrings.addDecorationTitle),
+                    VerticalSpace(6),
+                    Text(
+                      AppStrings.addDecorationSubtitle,
+                      style: TextStyles.text14400.copyWith(
+                        color: colorScheme.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+                content: StatefulBuilder(
+                  builder: (context, setState) {
+                    final maxWidth = MediaQuery.of(context).size.width * 0.9;
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: SizedBox(
+                        width: maxWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (state.decorationTypeStatus.isLoading ||
+                                state.decorationTypeStatus.isFailure)
+                              decorationContent,
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline,
+                                        size: 18,
+                                        color: colorScheme.primary,
+                                      ),
+                                      HorizontalSpace(8),
+                                      Text(
+                                        AppStrings.addNewDecoration,
+                                        style: TextStyles.text14500,
+                                      ),
+                                    ],
+                                  ),
+                                  VerticalSpace(12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: buildDecorationDropdown(
+                                          setState,
+                                        ),
+                                      ),
+                                      HorizontalSpace(12),
+                                      ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          minimumSize: const Size(0, 52),
+                                        ),
+                                        onPressed:
+                                            selectedDecorationId.value == null
+                                            ? null
+                                            : () {
+                                                final selected = state
+                                                    .decorationTypeOptions
+                                                    .where(
+                                                      (option) =>
+                                                          option.id ==
+                                                          selectedDecorationId
+                                                              .value,
+                                                    )
+                                                    .toList();
+                                                if (selected.isEmpty) {
+                                                  return;
+                                                }
+                                                cubit.addDecorationSelection(
+                                                  item.productId,
+                                                  item.variantId,
+                                                  selected.first,
+                                                );
+                                                final decorationType =
+                                                    MasterDetailTypeX
+                                                        .fromDetailCode(
+                                                  selected.first.detailCode,
+                                                );
+                                                if (decorationType ==
+                                                    MasterDetailType
+                                                        .embroideryDecoration) {
+                                                  if (state
+                                                          .embOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .embOptionsStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit.fetchEmbOptions(),
+                                                    );
+                                                  }
+                                                  if (state.embTypes.isEmpty &&
+                                                      !state
+                                                          .embTypesStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit.fetchEmbTypes(),
+                                                    );
+                                                  }
+                                                } else if (decorationType ==
+                                                    MasterDetailType
+                                                        .heatTransferDecoration) {
+                                                  if (state
+                                                          .heatTransferTypeOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .heatTransferTypeStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit
+                                                          .fetchHeatTransferTypes(),
+                                                    );
+                                                  }
+                                                } else if (decorationType ==
+                                                    MasterDetailType
+                                                        .screenPrintDecoration) {
+                                                  if (state
+                                                          .screenPrintColorOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .screenPrintColorStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit
+                                                          .fetchScreenPrintColors(),
+                                                    );
+                                                  }
+                                                  if (state
+                                                          .screenPrintGarmentOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .screenPrintGarmentStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit
+                                                          .fetchScreenPrintGarments(),
+                                                    );
+                                                  }
+                                                  if (state
+                                                          .screenPrintLocationOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .screenPrintLocationStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit
+                                                          .fetchScreenPrintLocations(),
+                                                    );
+                                                  }
+                                                } else if (decorationType ==
+                                                    MasterDetailType
+                                                        .leatherDecoration) {
+                                                  if (state
+                                                          .leatherColorOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .leatherColorStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit
+                                                          .fetchLeatherColors(),
+                                                    );
+                                                  }
+                                                } else if (decorationType ==
+                                                    MasterDetailType
+                                                        .patchesDecoration) {
+                                                  if (state
+                                                          .patchTypeOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .patchTypeStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit.fetchPatchTypes(),
+                                                    );
+                                                  }
+                                                } else if (decorationType ==
+                                                    MasterDetailType
+                                                        .labelsDecoration) {
+                                                  if (state
+                                                          .labelTypeOptions
+                                                          .isEmpty &&
+                                                      !state
+                                                          .labelTypeStatus
+                                                          .isLoading) {
+                                                    unawaited(
+                                                      cubit.fetchLabelTypes(),
+                                                    );
+                                                  }
+                                                }
+                                                setState(
+                                                  () =>
+                                                      selectedDecorationId
+                                                              .value =
+                                                          null,
+                                                );
+                                              },
+                                        icon: const Icon(Icons.add, size: 18),
+                                        label: Text(AppStrings.add),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            VerticalSpace(16),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 18,
+                                  color: colorScheme.primary,
+                                ),
+                                HorizontalSpace(8),
+                                Text(
+                                  AppStrings.yourDecorations,
+                                  style: TextStyles.text16500,
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    '${decorations.length} ${decorations.length == 1 ? 'item' : 'items'}',
+                                    style: TextStyles.text12400.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            VerticalSpace(12),
+                            if (decorations.isEmpty)
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: colorScheme.outlineVariant,
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      size: 32,
+                                      color: colorScheme.outline,
+                                    ),
+                                    VerticalSpace(12),
+                                    Text(
+                                      AppStrings.noDecorationsTitle,
+                                      style: TextStyles.text14400.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    VerticalSpace(6),
+                                    Text(
+                                      AppStrings.noDecorationsSubtitle,
+                                      style: TextStyles.text13400.copyWith(
+                                        color: colorScheme.secondaryText,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (decorations.isNotEmpty)
+                              ...List.generate(decorations.length, (index) {
+                                final decoration = decorations[index];
+                                final decorationType =
+                                    MasterDetailTypeX.fromDetailCode(
+                                  decoration.decorationTypeCode,
+                                );
+                                final isEmbroidery = decorationType ==
+                                    MasterDetailType.embroideryDecoration;
+                                final isHeatTransfer = decorationType ==
+                                    MasterDetailType.heatTransferDecoration;
+                                final isScreenPrint = decorationType ==
+                                    MasterDetailType.screenPrintDecoration;
+                                final isLeather = decorationType ==
+                                    MasterDetailType.leatherDecoration;
+                                final isPatches = decorationType ==
+                                    MasterDetailType.patchesDecoration;
+                                final isLabels = decorationType ==
+                                    MasterDetailType.labelsDecoration;
+                                if (isEmbroidery) {
+                                  if (state.embOptions.isEmpty &&
+                                      !state.embOptionsStatus.isLoading) {
+                                    unawaited(cubit.fetchEmbOptions());
+                                  }
+                                  if (state.embTypes.isEmpty &&
+                                      !state.embTypesStatus.isLoading) {
+                                    unawaited(cubit.fetchEmbTypes());
+                                  }
+                                }
+                                if (isHeatTransfer) {
+                                  if (state.heatTransferTypeOptions.isEmpty &&
+                                      !state.heatTransferTypeStatus.isLoading) {
+                                    unawaited(cubit.fetchHeatTransferTypes());
+                                  }
+                                }
+                                if (isScreenPrint) {
+                                  if (state.screenPrintColorOptions.isEmpty &&
+                                      !state.screenPrintColorStatus.isLoading) {
+                                    unawaited(cubit.fetchScreenPrintColors());
+                                  }
+                                  if (state.screenPrintGarmentOptions.isEmpty &&
+                                      !state
+                                          .screenPrintGarmentStatus
+                                          .isLoading) {
+                                    unawaited(cubit.fetchScreenPrintGarments());
+                                  }
+                                  if (state
+                                          .screenPrintLocationOptions
+                                          .isEmpty &&
+                                      !state
+                                          .screenPrintLocationStatus
+                                          .isLoading) {
+                                    unawaited(
+                                      cubit.fetchScreenPrintLocations(),
+                                    );
+                                  }
+                                }
+                                if (isLeather) {
+                                  if (state.leatherColorOptions.isEmpty &&
+                                      !state.leatherColorStatus.isLoading) {
+                                    unawaited(cubit.fetchLeatherColors());
+                                  }
+                                }
+                                if (isPatches) {
+                                  if (state.patchTypeOptions.isEmpty &&
+                                      !state.patchTypeStatus.isLoading) {
+                                    unawaited(cubit.fetchPatchTypes());
+                                  }
+                                }
+                                if (isLabels) {
+                                  if (state.labelTypeOptions.isEmpty &&
+                                      !state.labelTypeStatus.isLoading) {
+                                    unawaited(cubit.fetchLabelTypes());
+                                  }
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.surface,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: colorScheme.outlineVariant,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: colorScheme
+                                                    .primaryContainer,
+                                                borderRadius:
+                                                    BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                '#${index + 1}',
+                                                style: TextStyles.text12400
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ),
+                                            HorizontalSpace(8),
+                                            Expanded(
+                                              child: Text(
+                                                decoration.decorationTypeName,
+                                                style: TextStyles.text14500,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              onPressed: () => cubit
+                                                  .removeDecorationSelection(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                  ),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: AppColors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        VerticalSpace(12),
+                                        buildDecorationImageSection(
+                                          index: index,
+                                          imagePath:
+                                              decoration.decorationImagePath,
+                                        ),
+                                        if (isEmbroidery) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.embOptionsLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildEmbOptionsContent(
+                                            selectedId: decoration.embOptionId,
+                                            onChanged: (value) {
+                                              final selected = state.embOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit.updateDecorationEmbOption(
+                                                item.productId,
+                                                item.variantId,
+                                                index,
+                                                selected.isEmpty
+                                                    ? null
+                                                    : selected.first,
+                                              );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.embTypeLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildEmbTypesContent(
+                                            selectedId: decoration.embTypeId,
+                                            onChanged: (value) {
+                                              final selected = state.embTypes
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit.updateDecorationEmbType(
+                                                item.productId,
+                                                item.variantId,
+                                                index,
+                                                selected.isEmpty
+                                                    ? null
+                                                    : selected.first,
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                        if (isHeatTransfer) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.heatTransferTypeLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildHeatTransferTypeContent(
+                                            selectedId:
+                                                decoration.heatTransferTypeId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .heatTransferTypeOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit
+                                                  .updateDecorationHeatTransferType(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                    selected.isEmpty
+                                                        ? null
+                                                        : selected.first,
+                                                  );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .heatTransferWidthLabel,
+                                                  hintText: AppStrings
+                                                      .heatTransferWidthHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration
+                                                            .heatTransferWidth,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationHeatTransferWidth(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                              HorizontalSpace(12),
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .heatTransferHeightLabel,
+                                                  hintText: AppStrings
+                                                      .heatTransferHeightHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration
+                                                            .heatTransferHeight,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationHeatTransferHeight(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        if (isScreenPrint) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.screenPrintColorLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildScreenPrintColorContent(
+                                            selectedId:
+                                                decoration.screenPrintColorId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .screenPrintColorOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit
+                                                  .updateDecorationScreenPrintColor(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                    selected.isEmpty
+                                                        ? null
+                                                        : selected.first,
+                                                  );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.screenPrintGarmentLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildScreenPrintGarmentContent(
+                                            selectedId:
+                                                decoration.screenPrintGarmentId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .screenPrintGarmentOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit
+                                                  .updateDecorationScreenPrintGarment(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                    selected.isEmpty
+                                                        ? null
+                                                        : selected.first,
+                                                  );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.screenPrintLocationLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildScreenPrintLocationContent(
+                                            selectedId: decoration
+                                                .screenPrintLocationId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .screenPrintLocationOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit
+                                                  .updateDecorationScreenPrintLocation(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                    selected.isEmpty
+                                                        ? null
+                                                        : selected.first,
+                                                  );
+                                            },
+                                          ),
+                                        ],
+                                        if (isLeather) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.leatherColorLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildLeatherColorContent(
+                                            selectedId:
+                                                decoration.leatherColorId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .leatherColorOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit
+                                                  .updateDecorationLeatherColor(
+                                                    item.productId,
+                                                    item.variantId,
+                                                    index,
+                                                    selected.isEmpty
+                                                        ? null
+                                                        : selected.first,
+                                                  );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .leatherWidthLabel,
+                                                  hintText: AppStrings
+                                                      .leatherWidthHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration.leatherWidth,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationLeatherWidth(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                              HorizontalSpace(12),
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .leatherHeightLabel,
+                                                  hintText: AppStrings
+                                                      .leatherHeightHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration
+                                                            .leatherHeight,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationLeatherHeight(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        if (isPatches) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.patchTypeLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildPatchTypeContent(
+                                            selectedId: decoration.patchTypeId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .patchTypeOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit.updateDecorationPatchType(
+                                                item.productId,
+                                                item.variantId,
+                                                index,
+                                                selected.isEmpty
+                                                    ? null
+                                                    : selected.first,
+                                              );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .patchWidthLabel,
+                                                  hintText:
+                                                      AppStrings.patchWidthHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration.patchWidth,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationPatchWidth(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                              HorizontalSpace(12),
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .patchHeightLabel,
+                                                  hintText: AppStrings
+                                                      .patchHeightHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration.patchHeight,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationPatchHeight(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        if (isLabels) ...[
+                                          VerticalSpace(12),
+                                          Text(
+                                            AppStrings.labelTypeLabel,
+                                            style: TextStyles.text14400
+                                                .copyWith(
+                                                  color:
+                                                      colorScheme.secondaryText,
+                                                ),
+                                          ),
+                                          VerticalSpace(6),
+                                          buildLabelTypeContent(
+                                            selectedId: decoration.labelTypeId,
+                                            onChanged: (value) {
+                                              final selected = state
+                                                  .labelTypeOptions
+                                                  .where(
+                                                    (option) =>
+                                                        option.id == value,
+                                                  )
+                                                  .toList();
+                                              cubit.updateDecorationLabelType(
+                                                item.productId,
+                                                item.variantId,
+                                                index,
+                                                selected.isEmpty
+                                                    ? null
+                                                    : selected.first,
+                                              );
+                                            },
+                                          ),
+                                          VerticalSpace(12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .labelWidthLabel,
+                                                  hintText:
+                                                      AppStrings.labelWidthHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration.labelWidth,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationLabelWidth(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                              HorizontalSpace(12),
+                                              Expanded(
+                                                child: buildHeatTransferInchesField(
+                                                  label: AppStrings
+                                                      .labelHeightLabel,
+                                                  hintText: AppStrings
+                                                      .labelHeightHint,
+                                                  initialValue:
+                                                      formatInchesValue(
+                                                        decoration.labelHeight,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    final parsed =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : double.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                    cubit
+                                                        .updateDecorationLabelHeight(
+                                                          item.productId,
+                                                          item.variantId,
+                                                          index,
+                                                          parsed,
+                                                        );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                actions: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(AppStrings.cancel),
+                  ),
+                  VerticalSpace(8),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(AppStrings.saveDecorations),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,8 +2151,8 @@ class CartView extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(Constants.defaultPadding),
                 itemCount: 3,
-                separatorBuilder: (_, __) => VerticalSpace(12),
-                itemBuilder: (_, __) => const _CartItemPlaceholder(),
+                separatorBuilder: (_, _) => VerticalSpace(12),
+                itemBuilder: (_, _) => const _CartItemPlaceholder(),
               ),
             );
           }
@@ -307,59 +2370,40 @@ class CartView extends StatelessWidget {
                           ],
                         ),
                         VerticalSpace(12),
-                        Divider(
-                          height: 1,
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                        VerticalSpace(8),
-                        CheckboxListTile(
-                          value: item.hasPersonalization,
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            AppStrings.includeCustomEmbroideryPersonalization,
-                            style: TextStyles.text14400,
-                          ),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          onChanged: (value) =>
-                              context.read<CartCubit>().updatePersonalization(
-                                item.productId,
-                                item.variantId,
-                                value ?? false,
-                              ),
-                        ),
-                        VerticalSpace(8),
-                        Text(
-                          '${AppStrings.productionNotes} ${AppStrings.optional}',
-                          style: TextStyles.text14400.copyWith(
-                            color: Theme.of(context).colorScheme.secondaryText,
-                          ),
-                        ),
-                        VerticalSpace(8),
-                        TextField(
-                          onTapOutside: (_) =>
-                              FocusManager.instance.primaryFocus?.unfocus(),
-                          decoration: InputDecoration(
-                            hintText: AppStrings
-                                .logoPlacementThreadColorsSpecialInstructions,
-                            hintMaxLines: 2,
-                            filled: true,
-                            fillColor: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outlineVariant,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppStrings.decorationType,
+                                    style: TextStyles.text14400.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.secondaryText,
+                                    ),
+                                  ),
+                                  VerticalSpace(4),
+                                  Text(
+                                    item.customizationTypeName?.isNotEmpty ==
+                                            true
+                                        ? item.customizationTypeName!
+                                        : '-',
+                                    style: TextStyles.text14400.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          textInputAction: TextInputAction.done,
+                            TextButton.icon(
+                              onPressed: () =>
+                                  _showDecorationDialog(context, item),
+                              icon: const Icon(Icons.add_circle_outline),
+                              label: Text(AppStrings.addDecoration),
+                            ),
+                          ],
                         ),
                       ],
                     ),

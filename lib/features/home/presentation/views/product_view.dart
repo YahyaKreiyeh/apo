@@ -5,7 +5,6 @@ import 'package:apo/core/helpers/spacing.dart';
 import 'package:apo/core/models/result.dart';
 import 'package:apo/core/routing/route_names.dart';
 import 'package:apo/core/themes/app_colors.dart';
-import 'package:apo/core/themes/color_scheme.dart';
 import 'package:apo/core/themes/text_styles.dart';
 import 'package:apo/core/utilities/device_utility.dart';
 import 'package:apo/core/widgets/app_toast.dart';
@@ -172,10 +171,6 @@ class ProductView extends StatelessWidget {
                 return _ProductContent(
                   product: product,
                   quantity: state.quantity,
-                  hasPersonalization: state.hasPersonalization,
-                  onPersonalizationChanged: (value) => context
-                      .read<ProductDetailsCubit>()
-                      .setHasPersonalization(value),
                   onIncreaseQuantity: () =>
                       context.read<ProductDetailsCubit>().increaseQuantity(),
                   onDecreaseQuantity: () =>
@@ -263,11 +258,9 @@ class _ProductError extends StatelessWidget {
   }
 }
 
-class _ProductContent extends StatelessWidget {
+class _ProductContent extends StatefulWidget {
   final ProductDetailsEntity product;
   final int quantity;
-  final bool hasPersonalization;
-  final ValueChanged<bool> onPersonalizationChanged;
   final VoidCallback onIncreaseQuantity;
   final VoidCallback onDecreaseQuantity;
   final int? selectedVariantId;
@@ -276,8 +269,6 @@ class _ProductContent extends StatelessWidget {
   const _ProductContent({
     required this.product,
     required this.quantity,
-    required this.hasPersonalization,
-    required this.onPersonalizationChanged,
     required this.onIncreaseQuantity,
     required this.onDecreaseQuantity,
     required this.selectedVariantId,
@@ -285,22 +276,75 @@ class _ProductContent extends StatelessWidget {
   });
 
   @override
+  State<_ProductContent> createState() => _ProductContentState();
+}
+
+class _ProductContentState extends State<_ProductContent> {
+  String? _selectedImageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedImageUrl = _initialImageUrl();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProductContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.product.productId != widget.product.productId) {
+      _selectedImageUrl = _initialImageUrl();
+    }
+  }
+
+  String _initialImageUrl() {
+    final selectedVariant = _findSelectedVariant(
+      widget.product,
+      widget.selectedVariantId,
+    );
+    final variantImageUrl = selectedVariant?.images.isNotEmpty == true
+        ? selectedVariant!.images.first.imageUrl
+        : null;
+    if (widget.product.images.isNotEmpty) {
+      return widget.product.images.first.imageUrl;
+    }
+    return variantImageUrl ?? Constants.getPlaceHolderImage(10);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = DeviceUtility.getScreenWidth(context);
     final isWideLayout = screenWidth >= 900;
-    final imageUrl = product.images.isNotEmpty
-        ? product.images.first.imageUrl
-        : Constants.getPlaceHolderImage(10);
-    final inStock = product.isStockItem;
-    final categoryNames = product.categories
+    final selectedVariant = _findSelectedVariant(
+      widget.product,
+      widget.selectedVariantId,
+    );
+    final selectedVariantImageUrl = selectedVariant?.images.isNotEmpty == true
+        ? selectedVariant!.images.first.imageUrl
+        : null;
+    final imageUrl =
+        _selectedImageUrl ??
+        selectedVariantImageUrl ??
+        (widget.product.images.isNotEmpty
+            ? widget.product.images.first.imageUrl
+            : Constants.getPlaceHolderImage(10));
+    final categoryNames = widget.product.categories
         .map((category) => category.categoryName ?? '')
         .where((name) => name.isNotEmpty)
         .toList();
-    final priceRange = _findPricingRange(product);
-    final variantPriceOverride = product.basePrice > 0
-        ? product.basePrice
+    final variantPriceOverride = widget.product.basePrice > 0
+        ? widget.product.basePrice
         : null;
+    final fallbackImageUrl = widget.product.images.isNotEmpty
+        ? widget.product.images.first.imageUrl
+        : Constants.getPlaceHolderImage(10);
+    final colorOptions = _variantColorOptions(
+      widget.product.variants,
+      fallbackImageUrl: fallbackImageUrl,
+    );
+    final selectedColorKey = selectedVariant == null
+        ? null
+        : _colorKey(selectedVariant.colorName, selectedVariant.colorCode);
     final imageCard = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -330,139 +374,156 @@ class _ProductContent extends StatelessWidget {
     final detailsColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(product.productName, style: TextStyles.text24500),
-        VerticalSpace(4),
-        Text(
-          product.productSKU,
-          style: TextStyles.text14400.copyWith(
-            color: theme.colorScheme.secondaryText,
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: const [
+                  _InfoChip(label: 'Top Seller'),
+                  _InfoChip(label: 'New Color'),
+                ],
+              ),
+            ],
           ),
         ),
-        if (priceRange != null) ...[
-          VerticalSpace(8),
-          Text(
-            priceRange.min == priceRange.max
-                ? '\$${priceRange.min.toStringAsFixed(2)}'
-                : '\$${priceRange.min.toStringAsFixed(2)} - \$${priceRange.max.toStringAsFixed(2)}',
-            style: TextStyles.text24500.copyWith(
-              color: theme.colorScheme.primary,
+        VerticalSpace(16),
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.product.productSKU, style: TextStyles.text14400),
+            ],
+          ),
+        ),
+        VerticalSpace(16),
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.product.productName, style: TextStyles.text24500),
+            ],
+          ),
+        ),
+        if (colorOptions.isNotEmpty) ...[
+          VerticalSpace(16),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionHeader(title: 'Color'),
+                VerticalSpace(8),
+                _ColorSwatchSelector(
+                  options: colorOptions,
+                  selectedColorKey: selectedColorKey,
+                  onChanged: (variantId) {
+                    final variant = _findSelectedVariant(
+                      widget.product,
+                      variantId,
+                    );
+                    final variantImageUrl = variant?.images.isNotEmpty == true
+                        ? variant!.images.first.imageUrl
+                        : null;
+                    if (variantImageUrl != null) {
+                      setState(() => _selectedImageUrl = variantImageUrl);
+                    }
+                    widget.onVariantChanged(variantId);
+                  },
+                ),
+              ],
             ),
           ),
         ],
-        VerticalSpace(12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _InfoChip(
-              label: inStock ? AppStrings.inStock : AppStrings.outOfStock,
-            ),
-            if (product.hasVariants || product.variants.length > 1)
-              _InfoChip(label: AppStrings.multipleVariants),
-            if (product.hasCustomization)
-              _InfoChip(label: AppStrings.customization),
-            if (product.isUSAMade) _InfoChip(label: AppStrings.usaMade),
-            if (product.model3DUrl.isNotEmpty)
-              _InfoChip(label: AppStrings.model3d),
-          ],
-        ),
-        VerticalSpace(16),
-        _SectionHeader(title: AppStrings.descriptionTitle),
-        VerticalSpace(8),
-        Text(product.description, style: TextStyles.text14400),
         if (categoryNames.isNotEmpty) ...[
           VerticalSpace(16),
-          _SectionHeader(title: AppStrings.categories),
-          VerticalSpace(8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: categoryNames
-                .map((name) => _TagChip(label: name))
-                .toList(),
-          ),
-        ],
-        if (product.pricingTiers.isNotEmpty) ...[
-          VerticalSpace(16),
-          _SectionHeader(title: AppStrings.pricingInformation),
-          VerticalSpace(8),
-          _PricingTable(tiers: product.pricingTiers),
-        ],
-        VerticalSpace(16),
-        _SectionHeader(title: AppStrings.productionInformation),
-        VerticalSpace(8),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final itemWidth = (constraints.maxWidth - 12) / 2;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoTile(
-                    title: AppStrings.minimumOrder,
-                    value: '${product.minimumOrderQuantity} units',
-                  ),
+                _SectionHeader(title: AppStrings.categories),
+                VerticalSpace(8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: categoryNames
+                      .map((name) => _TagChip(label: name))
+                      .toList(),
                 ),
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoTile(
-                    title: AppStrings.standardProduction,
-                    value: '${product.standardProductionDays} days',
-                  ),
-                ),
-                SizedBox(
-                  width: itemWidth,
-                  child: _InfoTile(
-                    title: AppStrings.rushProduction,
-                    value: '${product.rushProductionDays} days',
-                  ),
-                ),
-                if (product.manufacturingLocation.isNotEmpty)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _InfoTile(
-                      title: AppStrings.location,
-                      value: product.manufacturingLocation,
-                    ),
-                  ),
               ],
-            );
-          },
+            ),
+          ),
+        ],
+        if (widget.product.pricingTiers.isNotEmpty) ...[
+          VerticalSpace(16),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionHeader(title: AppStrings.pricingInformation),
+                VerticalSpace(8),
+                _PricingTable(tiers: widget.product.pricingTiers),
+              ],
+            ),
+          ),
+        ],
+        VerticalSpace(16),
+        if (widget.product.variants.isNotEmpty)
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SectionHeader(title: AppStrings.variant),
+                VerticalSpace(8),
+                _VariantDropdown(
+                  variants: widget.product.variants,
+                  selectedVariantId: widget.selectedVariantId,
+                  onChanged: (variantId) {
+                    final variant = _findSelectedVariant(
+                      widget.product,
+                      variantId,
+                    );
+                    final variantImageUrl = variant?.images.isNotEmpty == true
+                        ? variant!.images.first.imageUrl
+                        : null;
+                    if (variantImageUrl != null) {
+                      setState(() => _selectedImageUrl = variantImageUrl);
+                    }
+                    widget.onVariantChanged(variantId);
+                  },
+                  priceOverride: variantPriceOverride,
+                ),
+              ],
+            ),
+          ),
+        VerticalSpace(16),
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionHeader(title: AppStrings.quantity),
+              VerticalSpace(8),
+              _QuantityPicker(
+                quantity: widget.quantity,
+                onDecrease: widget.onDecreaseQuantity,
+                onIncrease: widget.onIncreaseQuantity,
+              ),
+            ],
+          ),
         ),
         VerticalSpace(16),
-        if (product.variants.isNotEmpty) ...[
-          Text(AppStrings.variant),
-          VerticalSpace(12),
-          _VariantDropdown(
-            variants: product.variants,
-            selectedVariantId: selectedVariantId,
-            onChanged: onVariantChanged,
-            priceOverride: variantPriceOverride,
+        _SectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionHeader(title: AppStrings.descriptionTitle),
+              VerticalSpace(8),
+              Text(widget.product.description, style: TextStyles.text14400),
+            ],
           ),
-          VerticalSpace(12),
-        ],
-        Text(AppStrings.customizationType),
-        VerticalSpace(12),
-        const _CustomizationDropdown(),
-        VerticalSpace(12),
-        _QuantityPicker(
-          quantity: quantity,
-          onDecrease: onDecreaseQuantity,
-          onIncrease: onIncreaseQuantity,
-        ),
-        VerticalSpace(12),
-        _PersonalizationToggle(
-          value: hasPersonalization,
-          onChanged: onPersonalizationChanged,
         ),
       ],
-    );
-    final variantsSection = _VariantsSection(
-      variants: product.variants,
-      isWideLayout: isWideLayout,
-      priceOverride: variantPriceOverride,
     );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(Constants.defaultPadding),
@@ -479,9 +540,17 @@ class _ProductContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       imageCard,
-                      if (product.variants.isNotEmpty) ...[
-                        VerticalSpace(16),
-                        variantsSection,
+                      if (widget.product.images.isNotEmpty) ...[
+                        VerticalSpace(12),
+                        _SectionHeader(title: 'Product Images'),
+                        VerticalSpace(8),
+                        _ProductImageStrip(
+                          images: widget.product.images,
+                          selectedUrl: _selectedImageUrl,
+                          onSelected: (url) {
+                            setState(() => _selectedImageUrl = url);
+                          },
+                        ),
                       ],
                     ],
                   ),
@@ -492,9 +561,17 @@ class _ProductContent extends StatelessWidget {
             )
           else ...[
             imageCard,
-            if (product.variants.isNotEmpty) ...[
-              VerticalSpace(16),
-              variantsSection,
+            if (widget.product.images.isNotEmpty) ...[
+              VerticalSpace(12),
+              _SectionHeader(title: 'Product Images'),
+              VerticalSpace(8),
+              _ProductImageStrip(
+                images: widget.product.images,
+                selectedUrl: _selectedImageUrl,
+                onSelected: (url) {
+                  setState(() => _selectedImageUrl = url);
+                },
+              ),
             ],
             VerticalSpace(16),
             detailsColumn,
@@ -502,49 +579,6 @@ class _ProductContent extends StatelessWidget {
           VerticalSpace(80),
         ],
       ),
-    );
-  }
-}
-
-class _VariantsSection extends StatelessWidget {
-  final List<VariantEntity> variants;
-  final bool isWideLayout;
-  final double? priceOverride;
-
-  const _VariantsSection({
-    required this.variants,
-    required this.isWideLayout,
-    required this.priceOverride,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(title: AppStrings.availableVariants),
-        VerticalSpace(8),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final cardWidth = isWideLayout ? 220.0 : constraints.maxWidth;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: variants
-                  .map(
-                    (variant) => SizedBox(
-                      width: cardWidth,
-                      child: _VariantCard(
-                        variant: variant,
-                        priceOverride: priceOverride,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            );
-          },
-        ),
-      ],
     );
   }
 }
@@ -620,115 +654,6 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-class _InfoTile extends StatelessWidget {
-  final String title;
-  final String value;
-
-  const _InfoTile({required this.title, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyles.text14400.copyWith(
-              color: Theme.of(context).colorScheme.secondaryText,
-            ),
-          ),
-          VerticalSpace(6),
-          Text(value, style: TextStyles.text14400),
-        ],
-      ),
-    );
-  }
-}
-
-class _VariantCard extends StatelessWidget {
-  final VariantEntity variant;
-  final double? priceOverride;
-
-  const _VariantCard({required this.variant, required this.priceOverride});
-
-  @override
-  Widget build(BuildContext context) {
-    final sizeLabel = variant.sizeType?.sizeName ?? variant.sizeType?.sizeCode;
-    final stockLabel = 'Stock: ${variant.inventoryAvailable}';
-    final price = priceOverride ?? variant.basePrice;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _parseColor(context, variant.colorCode),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline,
-                    width: 0.5,
-                  ),
-                ),
-              ),
-              HorizontalSpace(8),
-              Expanded(
-                child: Text(
-                  sizeLabel == null
-                      ? variant.colorName
-                      : '${variant.colorName} • $sizeLabel',
-                  style: TextStyles.text14400,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                '\$${price.toStringAsFixed(2)}',
-                style: TextStyles.text14400.copyWith(
-                  color: Theme.of(context).colorScheme.secondaryText,
-                ),
-              ),
-            ],
-          ),
-          VerticalSpace(6),
-          Text(
-            stockLabel,
-            style: TextStyles.text14400.copyWith(
-              color: Theme.of(context).colorScheme.secondaryText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _parseColor(BuildContext context, String hex) {
-    final cleaned = hex.replaceAll('#', '').trim();
-    if (cleaned.length == 6 || cleaned.length == 8) {
-      final value = cleaned.length == 6 ? 'FF$cleaned' : cleaned.toUpperCase();
-      final color = int.tryParse(value, radix: 16);
-      if (color != null) {
-        return Color(color);
-      }
-    }
-    return Theme.of(context).colorScheme.primary;
-  }
-}
-
 class _PricingTable extends StatelessWidget {
   final List<PricingTierEntity> tiers;
 
@@ -741,7 +666,6 @@ class _PricingTable extends StatelessWidget {
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     final customizationKeys = _pricingCustomizationKeys(sortedTiers);
     if (customizationKeys.isEmpty) return const SizedBox.shrink();
-    final key = customizationKeys.first;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -749,43 +673,64 @@ class _PricingTable extends StatelessWidget {
           border: Border.all(color: theme.colorScheme.outline),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Table(
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          border: TableBorder.symmetric(
-            inside: BorderSide(color: theme.colorScheme.outline),
-          ),
-          columnWidths: const {0: FlexColumnWidth(1.2), 1: FlexColumnWidth(1)},
-          children: [
-            TableRow(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
-              ),
-              children: [
-                _PricingCell(
-                  label: AppStrings.customizationType,
-                  isHeader: true,
-                  alignStart: true,
-                ),
-                _PricingCell(
-                  label: _formatCustomizationKey(key),
-                  isHeader: true,
-                ),
-              ],
-            ),
-            ...sortedTiers.map((tier) {
-              final price = tier.customizationPrices[key];
-              return TableRow(
-                children: [
-                  _PricingCell(label: tier.tierName, alignStart: true),
-                  _PricingCell(
-                    label: price == null
-                        ? '-'
-                        : '\$${price.toStringAsFixed(2)}',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: Table(
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  border: TableBorder.symmetric(
+                    inside: BorderSide(color: theme.colorScheme.outline),
                   ),
-                ],
-              );
-            }),
-          ],
+                  columnWidths: {
+                    0: const FixedColumnWidth(140),
+                    for (var i = 0; i < sortedTiers.length; i++)
+                      i + 1: const FixedColumnWidth(110),
+                  },
+                  children: [
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                      ),
+                      children: [
+                        _PricingCell(
+                          label: AppStrings.quantity,
+                          isHeader: true,
+                          alignStart: true,
+                        ),
+                        ...sortedTiers.map(
+                          (tier) => _PricingCell(
+                            label: _formatTierLabel(tier),
+                            isHeader: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                    ...customizationKeys.map(
+                      (key) => TableRow(
+                        children: [
+                          _PricingCell(
+                            label: _formatCustomizationKey(key),
+                            alignStart: true,
+                            isRowHeader: true,
+                          ),
+                          ...sortedTiers.map(
+                            (tier) => _PricingCell(
+                              label: _formatPriceCell(
+                                tier.customizationPrices[key],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -796,11 +741,13 @@ class _PricingCell extends StatelessWidget {
   final String label;
   final bool isHeader;
   final bool alignStart;
+  final bool isRowHeader;
 
   const _PricingCell({
     required this.label,
     this.isHeader = false,
     this.alignStart = false,
+    this.isRowHeader = false,
   });
 
   @override
@@ -811,7 +758,10 @@ class _PricingCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Text(
         label,
-        style: isHeader ? TextStyles.text14500 : TextStyles.text14400,
+        textAlign: alignStart ? TextAlign.left : TextAlign.center,
+        style: isHeader || isRowHeader
+            ? TextStyles.text14500
+            : TextStyles.text14400,
       ),
     );
   }
@@ -868,41 +818,6 @@ class _VariantDropdown extends StatelessWidget {
   }
 }
 
-class _CustomizationDropdown extends StatelessWidget {
-  const _CustomizationDropdown();
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: AppStrings.blank,
-      isExpanded: true,
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.secondaryContainer,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      items: const [
-        DropdownMenuItem(
-          value: AppStrings.blank,
-          child: Text(AppStrings.blank),
-        ),
-        DropdownMenuItem(
-          value: AppStrings.selectCustomization,
-          child: Text(AppStrings.selectCustomization),
-        ),
-      ],
-      onChanged: (_) {},
-    );
-  }
-}
-
 class _QuantityPicker extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrease;
@@ -949,32 +864,167 @@ class _QuantityPicker extends StatelessWidget {
   }
 }
 
-class _PersonalizationToggle extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
+class _SectionCard extends StatelessWidget {
+  final Widget child;
 
-  const _PersonalizationToggle({required this.value, required this.onChanged});
+  const _SectionCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Theme.of(context).colorScheme.secondaryContainer,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => onChanged(!value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(AppStrings.hasPersonalization, style: TextStyles.text14400),
-              Checkbox(
-                value: value,
-                onChanged: (updated) => onChanged(updated ?? false),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _ProductImageStrip extends StatelessWidget {
+  final List<ProductImageEntity> images;
+  final String? selectedUrl;
+  final ValueChanged<String> onSelected;
+
+  const _ProductImageStrip({
+    required this.images,
+    required this.selectedUrl,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 84,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: images.length,
+        separatorBuilder: (_, _) => HorizontalSpace(10),
+        itemBuilder: (context, index) {
+          final image = images[index];
+          final isSelected = selectedUrl == image.imageUrl;
+          final borderColor = isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.6);
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => onSelected(image.imageUrl),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: borderColor,
+                  width: isSelected ? 2 : 1,
+                ),
               ),
-            ],
-          ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: CachedNetworkImage(
+                    imageUrl: image.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) => ShimmerPlaceholder(),
+                    errorWidget: (_, _, _) => NetworkImagePlaceholder(),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ColorSwatchSelector extends StatelessWidget {
+  final List<_ColorOption> options;
+  final String? selectedColorKey;
+  final ValueChanged<int?> onChanged;
+
+  const _ColorSwatchSelector({
+    required this.options,
+    required this.selectedColorKey,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: options
+          .map(
+            (option) => _ColorSwatch(
+              option: option,
+              isSelected: selectedColorKey == option.key,
+              onTap: () => onChanged(option.variantId),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _ColorSwatch extends StatelessWidget {
+  final _ColorOption option;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ColorSwatch({
+    required this.option,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = isSelected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.outline.withValues(alpha: 0.6);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: SizedBox(
+        width: 92,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: borderColor,
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: CachedNetworkImage(
+                    imageUrl: option.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) => ShimmerPlaceholder(),
+                    errorWidget: (_, _, _) => Container(color: option.color),
+                  ),
+                ),
+              ),
+            ),
+            VerticalSpace(6),
+            Text(
+              option.name,
+              style: TextStyles.text14400,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -991,30 +1041,6 @@ VariantEntity? _findSelectedVariant(
     (variant) => variant.variantId == variantId,
     orElse: () => product.variants.first,
   );
-}
-
-_PriceRange? _findPricingRange(ProductDetailsEntity product) {
-  final tiers = product.pricingTiers;
-  if (tiers.isNotEmpty) {
-    final prices = tiers
-        .map((tier) => tier.customizationPrices['BLANK'])
-        .whereType<double>()
-        .toList();
-    if (prices.isNotEmpty) {
-      prices.sort();
-      return _PriceRange(prices.first, prices.last);
-    }
-  }
-  if (product.basePrice > 0) {
-    return _PriceRange(product.basePrice, product.basePrice);
-  }
-  final variantPrices = product.variants
-      .map((variant) => variant.basePrice)
-      .where((price) => price > 0)
-      .toList();
-  if (variantPrices.isEmpty) return null;
-  variantPrices.sort();
-  return _PriceRange(variantPrices.first, variantPrices.last);
 }
 
 String _variantLabel(VariantEntity variant, {double? priceOverride}) {
@@ -1045,9 +1071,78 @@ String _formatCustomizationKey(String key) {
   return key[0].toUpperCase() + key.substring(1).toLowerCase();
 }
 
-class _PriceRange {
-  final double min;
-  final double max;
+String _formatTierLabel(PricingTierEntity tier) {
+  final range = _formatQuantityRange(tier.minQuantity, tier.maxQuantity);
+  final code = tier.tierCode.trim();
+  if (code.isEmpty) return range;
+  return '$range\n($code)';
+}
 
-  const _PriceRange(this.min, this.max);
+String _formatQuantityRange(int min, int? max) {
+  if (max == null) return '$min+';
+  if (min == max) return '$min';
+  return '$min-$max';
+}
+
+String _formatPriceCell(double? price) {
+  if (price == null) return '-';
+  return '\$${price.toStringAsFixed(2)}';
+}
+
+List<_ColorOption> _variantColorOptions(
+  List<VariantEntity> variants, {
+  required String fallbackImageUrl,
+}) {
+  final options = <_ColorOption>[];
+  final seen = <String>{};
+  for (final variant in variants) {
+    final key = _colorKey(variant.colorName, variant.colorCode);
+    if (seen.contains(key)) continue;
+    seen.add(key);
+    final imageUrl = variant.images.isNotEmpty
+        ? variant.images.first.imageUrl
+        : fallbackImageUrl;
+    options.add(
+      _ColorOption(
+        name: variant.colorName,
+        color: _parseColorFromHex(variant.colorCode),
+        imageUrl: imageUrl,
+        variantId: variant.variantId,
+        key: key,
+      ),
+    );
+  }
+  return options;
+}
+
+Color _parseColorFromHex(String hex) {
+  final cleaned = hex.replaceAll('#', '').trim();
+  if (cleaned.length == 6 || cleaned.length == 8) {
+    final value = cleaned.length == 6 ? 'FF$cleaned' : cleaned.toUpperCase();
+    final color = int.tryParse(value, radix: 16);
+    if (color != null) {
+      return Color(color);
+    }
+  }
+  return AppColors.primary;
+}
+
+String _colorKey(String name, String code) {
+  return '${name.trim().toLowerCase()}-${code.trim().toLowerCase()}';
+}
+
+class _ColorOption {
+  final String name;
+  final Color color;
+  final String imageUrl;
+  final int variantId;
+  final String key;
+
+  const _ColorOption({
+    required this.name,
+    required this.color,
+    required this.imageUrl,
+    required this.variantId,
+    required this.key,
+  });
 }

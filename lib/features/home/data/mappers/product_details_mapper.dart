@@ -28,7 +28,6 @@ extension ProductDetailsModelMapper on ProductDetailsModel? {
           this?.variants.map((variant) => variant.toDomain()).toList() ??
               const [],
       images: this?.images.map((image) => image.toDomain()).toList() ?? const [],
-      placementAreas: this?.placementAreas ?? const [],
       decorationMethods: this?.decorationMethods ?? const [],
       pricingTiers:
           this?.pricingTiers

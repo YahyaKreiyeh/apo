@@ -8,18 +8,21 @@ class ProductModel {
   final String productSKU;
   final String productName;
   final String description;
-  final bool hasVariants;
-  final bool hasCustomization;
   final int minimumOrderQuantity;
-  final int standardProductionDays;
   final double basePrice;
   final bool isActive;
+  final bool isStockItem;
+  final bool isUSAMade;
   final List<CategoryModel> categories;
-  final ProductImageModel? mainImage;
+  @JsonKey(defaultValue: <ProductImageModel>[])
+  final List<ProductImageModel> images;
   final int variantCount;
   final PriceRangeModel? priceRange;
+  @JsonKey(defaultValue: <String>[])
   final List<String> availableColors;
+  @JsonKey(defaultValue: <String>[])
   final List<String> availableSizes;
+  @JsonKey(defaultValue: <VariantModel>[])
   final List<VariantModel> variants;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -29,14 +32,13 @@ class ProductModel {
     required this.productSKU,
     required this.productName,
     required this.description,
-    required this.hasVariants,
-    required this.hasCustomization,
     required this.minimumOrderQuantity,
-    required this.standardProductionDays,
     required this.basePrice,
     required this.isActive,
+    required this.isStockItem,
+    required this.isUSAMade,
     required this.categories,
-    required this.mainImage,
+    required this.images,
     required this.variantCount,
     required this.priceRange,
     required this.availableColors,
@@ -57,6 +59,7 @@ class CategoryModel {
   final int? categoryId;
   final String? categoryName;
   final String? categorySlug;
+  final String? imageUrl;
   final int? parentCategoryId;
   final String? description;
   final int? displayOrder;
@@ -66,6 +69,7 @@ class CategoryModel {
     this.categoryId,
     this.categoryName,
     this.categorySlug,
+    this.imageUrl,
     this.parentCategoryId,
     this.description,
     this.displayOrder,
@@ -84,9 +88,8 @@ class ProductImageModel {
   @JsonKey(defaultValue: '')
   final String imageUrl;
   @JsonKey(defaultValue: '')
-  final String thumbnailUrl;
-  @JsonKey(defaultValue: '')
-  final String imageType;
+  final String originalImageUrl;
+  final ImageTypeModel? imageType;
   final int displayOrder;
   @JsonKey(defaultValue: '')
   final String altText;
@@ -94,7 +97,7 @@ class ProductImageModel {
   const ProductImageModel({
     required this.imageId,
     required this.imageUrl,
-    required this.thumbnailUrl,
+    required this.originalImageUrl,
     required this.imageType,
     required this.displayOrder,
     required this.altText,
@@ -131,6 +134,7 @@ class VariantModel {
   final SizeTypeModel? sizeType;
   @JsonKey(defaultValue: 0)
   final double basePrice;
+  @JsonKey(defaultValue: 0)
   final double weight;
   @JsonKey(defaultValue: '')
   final String dimensions;
@@ -177,4 +181,36 @@ class SizeTypeModel {
       _$SizeTypeModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$SizeTypeModelToJson(this);
+}
+
+@JsonSerializable()
+class ImageTypeModel {
+  final int masterDetailId;
+  final int masterId;
+  @JsonKey(defaultValue: '')
+  final String detailName;
+  @JsonKey(defaultValue: '')
+  final String detailCode;
+  final String? description;
+  final int displayOrder;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const ImageTypeModel({
+    required this.masterDetailId,
+    required this.masterId,
+    required this.detailName,
+    required this.detailCode,
+    required this.description,
+    required this.displayOrder,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ImageTypeModel.fromJson(Map<String, dynamic> json) =>
+      _$ImageTypeModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ImageTypeModelToJson(this);
 }

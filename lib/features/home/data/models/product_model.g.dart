@@ -11,31 +11,38 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
   productSKU: json['productSKU'] as String,
   productName: json['productName'] as String,
   description: json['description'] as String,
-  hasVariants: json['hasVariants'] as bool,
-  hasCustomization: json['hasCustomization'] as bool,
   minimumOrderQuantity: (json['minimumOrderQuantity'] as num).toInt(),
-  standardProductionDays: (json['standardProductionDays'] as num).toInt(),
   basePrice: (json['basePrice'] as num).toDouble(),
   isActive: json['isActive'] as bool,
+  isStockItem: json['isStockItem'] as bool,
+  isUSAMade: json['isUSAMade'] as bool,
   categories: (json['categories'] as List<dynamic>)
       .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
       .toList(),
-  mainImage: json['mainImage'] == null
-      ? null
-      : ProductImageModel.fromJson(json['mainImage'] as Map<String, dynamic>),
+  images:
+      (json['images'] as List<dynamic>?)
+          ?.map((e) => ProductImageModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
   variantCount: (json['variantCount'] as num).toInt(),
   priceRange: json['priceRange'] == null
       ? null
       : PriceRangeModel.fromJson(json['priceRange'] as Map<String, dynamic>),
-  availableColors: (json['availableColors'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
-  availableSizes: (json['availableSizes'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
-  variants: (json['variants'] as List<dynamic>)
-      .map((e) => VariantModel.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  availableColors:
+      (json['availableColors'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      [],
+  availableSizes:
+      (json['availableSizes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      [],
+  variants:
+      (json['variants'] as List<dynamic>?)
+          ?.map((e) => VariantModel.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
   createdAt: json['createdAt'] == null
       ? null
       : DateTime.parse(json['createdAt'] as String),
@@ -50,14 +57,13 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'productSKU': instance.productSKU,
       'productName': instance.productName,
       'description': instance.description,
-      'hasVariants': instance.hasVariants,
-      'hasCustomization': instance.hasCustomization,
       'minimumOrderQuantity': instance.minimumOrderQuantity,
-      'standardProductionDays': instance.standardProductionDays,
       'basePrice': instance.basePrice,
       'isActive': instance.isActive,
+      'isStockItem': instance.isStockItem,
+      'isUSAMade': instance.isUSAMade,
       'categories': instance.categories,
-      'mainImage': instance.mainImage,
+      'images': instance.images,
       'variantCount': instance.variantCount,
       'priceRange': instance.priceRange,
       'availableColors': instance.availableColors,
@@ -72,6 +78,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
       categoryId: (json['categoryId'] as num?)?.toInt(),
       categoryName: json['categoryName'] as String?,
       categorySlug: json['categorySlug'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       parentCategoryId: (json['parentCategoryId'] as num?)?.toInt(),
       description: json['description'] as String?,
       displayOrder: (json['displayOrder'] as num?)?.toInt(),
@@ -83,6 +90,7 @@ Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
       'categoryId': instance.categoryId,
       'categoryName': instance.categoryName,
       'categorySlug': instance.categorySlug,
+      'imageUrl': instance.imageUrl,
       'parentCategoryId': instance.parentCategoryId,
       'description': instance.description,
       'displayOrder': instance.displayOrder,
@@ -93,8 +101,10 @@ ProductImageModel _$ProductImageModelFromJson(Map<String, dynamic> json) =>
     ProductImageModel(
       imageId: (json['imageId'] as num).toInt(),
       imageUrl: json['imageUrl'] as String? ?? '',
-      thumbnailUrl: json['thumbnailUrl'] as String? ?? '',
-      imageType: json['imageType'] as String? ?? '',
+      originalImageUrl: json['originalImageUrl'] as String? ?? '',
+      imageType: json['imageType'] == null
+          ? null
+          : ImageTypeModel.fromJson(json['imageType'] as Map<String, dynamic>),
       displayOrder: (json['displayOrder'] as num).toInt(),
       altText: json['altText'] as String? ?? '',
     );
@@ -103,7 +113,7 @@ Map<String, dynamic> _$ProductImageModelToJson(ProductImageModel instance) =>
     <String, dynamic>{
       'imageId': instance.imageId,
       'imageUrl': instance.imageUrl,
-      'thumbnailUrl': instance.thumbnailUrl,
+      'originalImageUrl': instance.originalImageUrl,
       'imageType': instance.imageType,
       'displayOrder': instance.displayOrder,
       'altText': instance.altText,
@@ -127,7 +137,7 @@ VariantModel _$VariantModelFromJson(Map<String, dynamic> json) => VariantModel(
       ? null
       : SizeTypeModel.fromJson(json['sizeType'] as Map<String, dynamic>),
   basePrice: (json['basePrice'] as num?)?.toDouble() ?? 0,
-  weight: (json['weight'] as num).toDouble(),
+  weight: (json['weight'] as num?)?.toDouble() ?? 0,
   dimensions: json['dimensions'] as String? ?? '',
   isActive: json['isActive'] as bool,
   inventoryAvailable: (json['inventoryAvailable'] as num).toInt(),
@@ -165,4 +175,34 @@ Map<String, dynamic> _$SizeTypeModelToJson(SizeTypeModel instance) =>
       'sizeTypeId': instance.sizeTypeId,
       'sizeCode': instance.sizeCode,
       'sizeName': instance.sizeName,
+    };
+
+ImageTypeModel _$ImageTypeModelFromJson(Map<String, dynamic> json) =>
+    ImageTypeModel(
+      masterDetailId: (json['masterDetailId'] as num).toInt(),
+      masterId: (json['masterId'] as num).toInt(),
+      detailName: json['detailName'] as String? ?? '',
+      detailCode: json['detailCode'] as String? ?? '',
+      description: json['description'] as String?,
+      displayOrder: (json['displayOrder'] as num).toInt(),
+      isActive: json['isActive'] as bool,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
+    );
+
+Map<String, dynamic> _$ImageTypeModelToJson(ImageTypeModel instance) =>
+    <String, dynamic>{
+      'masterDetailId': instance.masterDetailId,
+      'masterId': instance.masterId,
+      'detailName': instance.detailName,
+      'detailCode': instance.detailCode,
+      'description': instance.description,
+      'displayOrder': instance.displayOrder,
+      'isActive': instance.isActive,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };

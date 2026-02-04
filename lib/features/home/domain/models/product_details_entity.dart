@@ -20,7 +20,6 @@ class ProductDetailsEntity {
   final List<CategoryEntity> categories;
   final List<VariantEntity> variants;
   final List<ProductImageEntity> images;
-  final List<dynamic> placementAreas;
   final List<dynamic> decorationMethods;
   final List<PricingTierEntity> pricingTiers;
   final DateTime? createdAt;
@@ -46,7 +45,6 @@ class ProductDetailsEntity {
     required this.categories,
     required this.variants,
     required this.images,
-    required this.placementAreas,
     required this.decorationMethods,
     required this.pricingTiers,
     required this.createdAt,

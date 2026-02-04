@@ -144,6 +144,84 @@ class AppStrings {
   static const String unitPrice = 'Unit Price';
   static const String hasPersonalization = 'Has personalization';
   static const String personalization = 'Personalization';
+  static const String decorationType = 'Decoration Type';
+  static const String addDecoration = 'Add Decoration';
+  static const String addDecorationTitle = 'Add Decoration';
+  static const String addDecorationSubtitle =
+      'Customize your product with embroidery, prints, or other decorations';
+  static const String addNewDecoration = 'Add New Decoration';
+  static const String add = 'Add';
+  static const String yourDecorations = 'Your Decorations';
+  static const String noDecorationsTitle = 'No decorations added yet';
+  static const String noDecorationsSubtitle =
+      'Select a decoration type above to get started';
+  static const String saveDecorations = 'Save Decorations';
+  static const String selectDecorationType = 'Select decoration type';
+  static const String loadingDecorations = 'Loading decorations...';
+  static const String noDecorationTypes = 'No decoration types available';
+  static const String embOptionsLabel = 'EMB Options';
+  static const String embTypeLabel = 'Type';
+  static const String selectEmbOption = 'Select option';
+  static const String selectEmbType = 'Select type';
+  static const String heatTransferTypeLabel = 'Type of Transfer';
+  static const String selectHeatTransferType = 'Select transfer type';
+  static const String loadingHeatTransferTypes =
+      'Loading heat transfer types...';
+  static const String noHeatTransferTypes =
+      'No heat transfer types available';
+  static const String heatTransferWidthLabel = 'Width (inches)';
+  static const String heatTransferHeightLabel = 'Height (inches)';
+  static const String heatTransferWidthHint = '0';
+  static const String heatTransferHeightHint = '0';
+  static const String screenPrintColorLabel = 'Color';
+  static const String screenPrintGarmentLabel = 'Garment';
+  static const String screenPrintLocationLabel = 'Location';
+  static const String selectScreenPrintColor = 'Select color';
+  static const String selectScreenPrintGarment = 'Select garment';
+  static const String selectScreenPrintLocation = 'Select location';
+  static const String loadingScreenPrintColors =
+      'Loading screen print colors...';
+  static const String loadingScreenPrintGarments =
+      'Loading screen print garments...';
+  static const String loadingScreenPrintLocations =
+      'Loading screen print locations...';
+  static const String noScreenPrintColors = 'No screen print colors available';
+  static const String noScreenPrintGarments =
+      'No screen print garments available';
+  static const String noScreenPrintLocations =
+      'No screen print locations available';
+  static const String leatherColorLabel = 'Color of Leather';
+  static const String selectLeatherColor = 'Select color';
+  static const String loadingLeatherColors = 'Loading leather colors...';
+  static const String noLeatherColors = 'No leather colors available';
+  static const String leatherWidthLabel = 'Width (inches)';
+  static const String leatherHeightLabel = 'Height (inches)';
+  static const String leatherWidthHint = '0';
+  static const String leatherHeightHint = '0';
+  static const String patchTypeLabel = 'Type of Patch';
+  static const String selectPatchType = 'Select patch type';
+  static const String loadingPatchTypes = 'Loading patch types...';
+  static const String noPatchTypes = 'No patch types available';
+  static const String patchWidthLabel = 'Width (inches)';
+  static const String patchHeightLabel = 'Height (inches)';
+  static const String patchWidthHint = '0';
+  static const String patchHeightHint = '0';
+  static const String labelTypeLabel = 'Type of Label';
+  static const String selectLabelType = 'Select label type';
+  static const String loadingLabelTypes = 'Loading label types...';
+  static const String noLabelTypes = 'No label types available';
+  static const String labelWidthLabel = 'Width (inches)';
+  static const String labelHeightLabel = 'Height (inches)';
+  static const String labelWidthHint = '0';
+  static const String labelHeightHint = '0';
+  static const String decorationImageLabel = 'Decoration Image';
+  static const String uploadImage = 'Upload Image';
+  static const String changeImage = 'Change Image';
+  static const String removeImage = 'Remove Image';
+  static const String loadingEmbOptions = 'Loading embroidery options...';
+  static const String loadingEmbTypes = 'Loading embroidery types...';
+  static const String noEmbOptions = 'No embroidery options available';
+  static const String noEmbTypes = 'No embroidery types available';
   static const String descriptionTitle = 'Description';
   static const String availableVariants = 'Available Variants';
   static const String selectVariant = 'Select variant';

@@ -9,16 +9,16 @@ extension ProductModelMapper on ProductModel? {
       productSKU: this?.productSKU ?? '',
       productName: this?.productName ?? '',
       description: this?.description ?? '',
-      hasVariants: this?.hasVariants ?? false,
-      hasCustomization: this?.hasCustomization ?? false,
       minimumOrderQuantity: this?.minimumOrderQuantity ?? 0,
-      standardProductionDays: this?.standardProductionDays ?? 0,
       basePrice: this?.basePrice ?? 0,
       isActive: this?.isActive ?? false,
+      isStockItem: this?.isStockItem ?? false,
+      isUSAMade: this?.isUSAMade ?? false,
       categories: categories.isEmpty
           ? const []
           : categories.map((category) => category.toDomain()).toList(),
-      mainImage: this?.mainImage?.toDomain(),
+      images:
+          this?.images.map((image) => image.toDomain()).toList() ?? const [],
       variantCount: this?.variantCount ?? 0,
       priceRange: this?.priceRange?.toDomain(),
       availableColors: this?.availableColors ?? const [],
@@ -38,6 +38,7 @@ extension CategoryModelMapper on CategoryModel? {
       categoryId: this?.categoryId,
       categoryName: this?.categoryName,
       categorySlug: this?.categorySlug,
+      imageUrl: this?.imageUrl,
       parentCategoryId: this?.parentCategoryId,
       description: this?.description,
       displayOrder: this?.displayOrder,
@@ -51,10 +52,26 @@ extension ProductImageModelMapper on ProductImageModel? {
     return ProductImageEntity(
       imageId: this?.imageId ?? 0,
       imageUrl: this?.imageUrl ?? '',
-      thumbnailUrl: this?.thumbnailUrl ?? '',
-      imageType: this?.imageType ?? '',
+      originalImageUrl: this?.originalImageUrl ?? '',
+      imageType: this?.imageType?.toDomain(),
       displayOrder: this?.displayOrder ?? 0,
       altText: this?.altText ?? '',
+    );
+  }
+}
+
+extension ImageTypeModelMapper on ImageTypeModel? {
+  ImageTypeEntity toDomain() {
+    return ImageTypeEntity(
+      masterDetailId: this?.masterDetailId ?? 0,
+      masterId: this?.masterId ?? 0,
+      detailName: this?.detailName ?? '',
+      detailCode: this?.detailCode ?? '',
+      description: this?.description,
+      displayOrder: this?.displayOrder ?? 0,
+      isActive: this?.isActive ?? false,
+      createdAt: this?.createdAt,
+      updatedAt: this?.updatedAt,
     );
   }
 }

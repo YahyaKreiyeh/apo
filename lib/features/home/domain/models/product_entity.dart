@@ -3,14 +3,13 @@ class ProductEntity {
   final String productSKU;
   final String productName;
   final String description;
-  final bool hasVariants;
-  final bool hasCustomization;
   final int minimumOrderQuantity;
-  final int standardProductionDays;
   final double basePrice;
   final bool isActive;
+  final bool isStockItem;
+  final bool isUSAMade;
   final List<CategoryEntity> categories;
-  final ProductImageEntity? mainImage;
+  final List<ProductImageEntity> images;
   final int variantCount;
   final PriceRangeEntity? priceRange;
   final List<String> availableColors;
@@ -24,14 +23,13 @@ class ProductEntity {
     required this.productSKU,
     required this.productName,
     required this.description,
-    required this.hasVariants,
-    required this.hasCustomization,
     required this.minimumOrderQuantity,
-    required this.standardProductionDays,
     required this.basePrice,
     required this.isActive,
+    required this.isStockItem,
+    required this.isUSAMade,
     required this.categories,
-    required this.mainImage,
+    required this.images,
     required this.variantCount,
     required this.priceRange,
     required this.availableColors,
@@ -46,6 +44,7 @@ class CategoryEntity {
   final int? categoryId;
   final String? categoryName;
   final String? categorySlug;
+  final String? imageUrl;
   final int? parentCategoryId;
   final String? description;
   final int? displayOrder;
@@ -55,6 +54,7 @@ class CategoryEntity {
     this.categoryId,
     this.categoryName,
     this.categorySlug,
+    this.imageUrl,
     this.parentCategoryId,
     this.description,
     this.displayOrder,
@@ -65,18 +65,42 @@ class CategoryEntity {
 class ProductImageEntity {
   final int imageId;
   final String imageUrl;
-  final String thumbnailUrl;
-  final String imageType;
+  final String originalImageUrl;
+  final ImageTypeEntity? imageType;
   final int displayOrder;
   final String altText;
 
   const ProductImageEntity({
     required this.imageId,
     required this.imageUrl,
-    required this.thumbnailUrl,
+    required this.originalImageUrl,
     required this.imageType,
     required this.displayOrder,
     required this.altText,
+  });
+}
+
+class ImageTypeEntity {
+  final int masterDetailId;
+  final int masterId;
+  final String detailName;
+  final String detailCode;
+  final String? description;
+  final int displayOrder;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const ImageTypeEntity({
+    required this.masterDetailId,
+    required this.masterId,
+    required this.detailName,
+    required this.detailCode,
+    required this.description,
+    required this.displayOrder,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
   });
 }
 
