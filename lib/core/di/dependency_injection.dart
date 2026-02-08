@@ -29,7 +29,9 @@ import 'package:apo/features/home/domain/repositories/products_repository.dart';
 import 'package:apo/features/home/domain/usecases/add_cart_item_usecase.dart';
 import 'package:apo/features/home/domain/usecases/checkout_usecase.dart';
 import 'package:apo/features/home/domain/usecases/clear_cart_usecase.dart';
+import 'package:apo/features/home/domain/usecases/create_decoration_usecase.dart';
 import 'package:apo/features/home/domain/usecases/delete_cart_item_usecase.dart';
+import 'package:apo/features/home/domain/usecases/delete_decoration_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_cart_items_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_master_detail_options_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_order_details_usecase.dart';
@@ -37,6 +39,8 @@ import 'package:apo/features/home/domain/usecases/get_orders_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_product_details_usecase.dart';
 import 'package:apo/features/home/domain/usecases/get_products_usecase.dart';
 import 'package:apo/features/home/domain/usecases/reorder_order_usecase.dart';
+import 'package:apo/features/home/domain/usecases/update_cart_item_usecase.dart';
+import 'package:apo/features/home/domain/usecases/upload_decoration_image_usecase.dart';
 import 'package:apo/features/home/presentation/cubits/cart_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/order_details_cubit.dart';
 import 'package:apo/features/home/presentation/cubits/orders_cubit.dart';
@@ -80,6 +84,10 @@ Future<void> setupGetIt() async {
       getIt<GetCartItemsUseCase>(),
       getIt<DeleteCartItemUseCase>(),
       getIt<GetMasterDetailOptionsUseCase>(),
+      getIt<UploadDecorationImageUseCase>(),
+      getIt<CreateDecorationUseCase>(),
+      getIt<UpdateCartItemUseCase>(),
+      getIt<DeleteDecorationUseCase>(),
     ),
   );
   getIt.registerLazySingleton<ProfileCubit>(() => ProfileCubit());
@@ -116,6 +124,18 @@ Future<void> setupGetIt() async {
   );
   getIt.registerLazySingleton<DeleteCartItemUseCase>(
     () => DeleteCartItemUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<UploadDecorationImageUseCase>(
+    () => UploadDecorationImageUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<CreateDecorationUseCase>(
+    () => CreateDecorationUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateCartItemUseCase>(
+    () => UpdateCartItemUseCase(getIt<CartRepository>()),
+  );
+  getIt.registerLazySingleton<DeleteDecorationUseCase>(
+    () => DeleteDecorationUseCase(getIt<CartRepository>()),
   );
   getIt.registerLazySingleton<ClearCartUseCase>(
     () => ClearCartUseCase(getIt<CartRepository>()),

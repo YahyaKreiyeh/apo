@@ -34,13 +34,22 @@ class CartView extends StatelessWidget {
   ) async {
     final cubit = context.read<CartCubit>();
     final imagePicker = ImagePicker();
+    final uploadingIndexes = ValueNotifier<Set<int>>(<int>{});
+    final isSaving = ValueNotifier<bool>(false);
     if (cubit.state.decorationTypeOptions.isEmpty &&
         !cubit.state.decorationTypeStatus.isLoading) {
       unawaited(cubit.fetchDecorationTypeOptions());
     }
     if (!context.mounted) return;
+    final initialDecorations =
+        List<CartDecorationSelection>.from(
+          cubit.state.decorationsByItem[
+                '${item.productId}-${item.variantId}'] ??
+            const [],
+        );
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogContext) {
         final colorScheme = Theme.of(dialogContext).colorScheme;
         final selectedDecorationId = ValueNotifier<int?>(null);
@@ -976,15 +985,61 @@ class CartView extends StatelessWidget {
                   imageQuality: 85,
                 );
                 if (selected == null) return;
-                cubit.updateDecorationImagePath(
-                  item.productId,
-                  item.variantId,
-                  index,
-                  selected.path,
+                if (kIsWeb) {
+                  final bytes = await selected.readAsBytes();
+                  cubit.updateDecorationImagePath(
+                    item.productId,
+                    item.variantId,
+                    index,
+                    selected.path,
+                  );
+                  cubit.updateDecorationImageBytes(
+                    item.productId,
+                    item.variantId,
+                    index,
+                    bytes,
+                    selected.name,
+                  );
+                  return;
+                }
+                uploadingIndexes.value = {...uploadingIndexes.value, index};
+                final response = await cubit.uploadDecorationImage(
+                  productId: item.productId,
+                  variantId: item.variantId,
+                  index: index,
+                  image: selected,
+                );
+                uploadingIndexes.value = Set<int>.from(
+                  uploadingIndexes.value.where((value) => value != index),
+                );
+                response.when(
+                  success: (_) {},
+                  failure: (error) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(error.title ?? AppStrings.unknownError),
+                      ),
+                    );
+                  },
                 );
               }
 
+              String resolveDecorationImageUrl(String path) {
+                if (path.startsWith('http')) {
+                  return path;
+                }
+                if (path.startsWith('Content/')) {
+                  return 'https://apolloemb.runasp.net/$path';
+                }
+                return path;
+              }
+
               Widget buildDecorationImagePreview(String imagePath) {
+                final resolvedPath = resolveDecorationImageUrl(imagePath);
+                if (resolvedPath.startsWith('http')) {
+                  return Image.network(resolvedPath, fit: BoxFit.cover);
+                }
                 if (kIsWeb) {
                   return Image.network(imagePath, fit: BoxFit.cover);
                 }
@@ -1013,40 +1068,72 @@ class CartView extends StatelessWidget {
                       ],
                     ),
                     VerticalSpace(10),
-                    if (imagePath == null)
-                      OutlinedButton.icon(
-                        onPressed: () => pickDecorationImage(index),
-                        icon: const Icon(Icons.upload_outlined),
-                        label: Text(AppStrings.uploadImage),
-                      )
-                    else ...[
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          height: 140,
-                          width: double.infinity,
-                          color: colorScheme.surfaceContainerHighest,
-                          child: buildDecorationImagePreview(imagePath),
-                        ),
-                      ),
-                      VerticalSpace(8),
-                      OutlinedButton.icon(
-                        onPressed: () => pickDecorationImage(index),
-                        icon: const Icon(Icons.refresh),
-                        label: Text(AppStrings.changeImage),
-                      ),
-                      VerticalSpace(8),
-                      OutlinedButton.icon(
-                        onPressed: () => cubit.updateDecorationImagePath(
-                          item.productId,
-                          item.variantId,
-                          index,
-                          null,
-                        ),
-                        icon: const Icon(Icons.delete_outline),
-                        label: Text(AppStrings.removeImage),
-                      ),
-                    ],
+                    ValueListenableBuilder<Set<int>>(
+                      valueListenable: uploadingIndexes,
+                      builder: (context, uploading, _) {
+                        final isUploading = uploading.contains(index);
+                        if (imagePath == null) {
+                          return OutlinedButton.icon(
+                            onPressed: isUploading
+                                ? null
+                                : () => pickDecorationImage(index),
+                            icon: isUploading
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.upload_outlined),
+                            label: Text(AppStrings.uploadImage),
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                height: 140,
+                                width: double.infinity,
+                                color: colorScheme.surfaceContainerHighest,
+                                child: buildDecorationImagePreview(imagePath),
+                              ),
+                            ),
+                            VerticalSpace(8),
+                            OutlinedButton.icon(
+                              onPressed: isUploading
+                                  ? null
+                                  : () => pickDecorationImage(index),
+                              icon: isUploading
+                                  ? const SizedBox(
+                                      height: 16,
+                                      width: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.refresh),
+                              label: Text(AppStrings.changeImage),
+                            ),
+                            VerticalSpace(8),
+                            OutlinedButton.icon(
+                              onPressed: isUploading
+                                  ? null
+                                  : () => cubit.updateDecorationImagePath(
+                                      item.productId,
+                                      item.variantId,
+                                      index,
+                                      null,
+                                    ),
+                              icon: const Icon(Icons.delete_outline),
+                              label: Text(AppStrings.removeImage),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 );
               }
@@ -1086,10 +1173,20 @@ class CartView extends StatelessWidget {
                   ],
                 ),
               );
-              return AlertDialog(
-                scrollable: true,
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              return ValueListenableBuilder<Set<int>>(
+                valueListenable: uploadingIndexes,
+                builder: (context, uploading, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: isSaving,
+                    builder: (context, saving, __) {
+                      final isUploading = uploading.isNotEmpty;
+                      final isBusy = isUploading || saving;
+                      return WillPopScope(
+                        onWillPop: () async => !isBusy,
+                        child: AlertDialog(
+                        scrollable: true,
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(AppStrings.addDecorationTitle),
                     VerticalSpace(6),
@@ -1176,10 +1273,9 @@ class CartView extends StatelessWidget {
                                                   selected.first,
                                                 );
                                                 final decorationType =
-                                                    MasterDetailTypeX
-                                                        .fromDetailCode(
-                                                  selected.first.detailCode,
-                                                );
+                                                    MasterDetailTypeX.fromDetailCode(
+                                                      selected.first.detailCode,
+                                                    );
                                                 if (decorationType ==
                                                     MasterDetailType
                                                         .embroideryDecoration) {
@@ -1387,19 +1483,25 @@ class CartView extends StatelessWidget {
                                 final decoration = decorations[index];
                                 final decorationType =
                                     MasterDetailTypeX.fromDetailCode(
-                                  decoration.decorationTypeCode,
-                                );
-                                final isEmbroidery = decorationType ==
+                                      decoration.decorationTypeCode,
+                                    );
+                                final isEmbroidery =
+                                    decorationType ==
                                     MasterDetailType.embroideryDecoration;
-                                final isHeatTransfer = decorationType ==
+                                final isHeatTransfer =
+                                    decorationType ==
                                     MasterDetailType.heatTransferDecoration;
-                                final isScreenPrint = decorationType ==
+                                final isScreenPrint =
+                                    decorationType ==
                                     MasterDetailType.screenPrintDecoration;
-                                final isLeather = decorationType ==
+                                final isLeather =
+                                    decorationType ==
                                     MasterDetailType.leatherDecoration;
-                                final isPatches = decorationType ==
+                                final isPatches =
+                                    decorationType ==
                                     MasterDetailType.patchesDecoration;
-                                final isLabels = decorationType ==
+                                final isLabels =
+                                    decorationType ==
                                     MasterDetailType.labelsDecoration;
                                 if (isEmbroidery) {
                                   if (state.embOptions.isEmpty &&
@@ -1503,12 +1605,33 @@ class CartView extends StatelessWidget {
                                               ),
                                             ),
                                             IconButton(
-                                              onPressed: () => cubit
-                                                  .removeDecorationSelection(
-                                                    item.productId,
-                                                    item.variantId,
-                                                    index,
-                                                  ),
+                                              onPressed: () async {
+                                                final response = await cubit
+                                                    .deleteDecorationSelection(
+                                                      productId: item.productId,
+                                                      variantId: item.variantId,
+                                                      index: index,
+                                                    );
+                                                response.when(
+                                                  success: (_) {},
+                                                  failure: (error) {
+                                                    if (!context.mounted) {
+                                                      return;
+                                                    }
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          error.title ??
+                                                              AppStrings
+                                                                  .unknownError,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
                                               icon: const Icon(
                                                 Icons.delete_outline,
                                                 color: AppColors.red,
@@ -2066,23 +2189,73 @@ class CartView extends StatelessWidget {
                     );
                   },
                 ),
-                actions: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text(AppStrings.cancel),
-                  ),
-                  VerticalSpace(8),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text(AppStrings.saveDecorations),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
+                        actions: [
+                          OutlinedButton(
+                            onPressed: (saving || isUploading)
+                                ? null
+                                : () {
+                                    cubit.setDecorationsForItem(
+                                      item.productId,
+                                      item.variantId,
+                                      initialDecorations,
+                                    );
+                                    Navigator.of(dialogContext).pop();
+                                  },
+                            child: Text(AppStrings.cancel),
+                          ),
+                          VerticalSpace(8),
+                          ElevatedButton(
+                            onPressed: (saving || isUploading)
+                                ? null
+                                : () async {
+                                    isSaving.value = true;
+                                    final response = await cubit
+                                        .saveDecorationsForItem(
+                                          cartItemId: item.cartItemId,
+                                          quantity: item.quantity,
+                                          productId: item.productId,
+                                          variantId: item.variantId,
+                                        );
+                                    isSaving.value = false;
+                                    response.when(
+                                      success: (_) =>
+                                          Navigator.of(dialogContext).pop(),
+                                      failure: (error) {
+                                        if (!context.mounted) return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              error.title ??
+                                                  AppStrings.unknownError,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                            child: saving
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(AppStrings.saveDecorations),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
+      );
+    },
+  );
   }
 
   @override
@@ -2370,40 +2543,180 @@ class CartView extends StatelessWidget {
                           ],
                         ),
                         VerticalSpace(12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppStrings.decorationType,
-                                    style: TextStyles.text14400.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.secondaryText,
+                        Builder(
+                          builder: (context) {
+                            final decorations = item.decorations;
+                            final hasDecorations = decorations.isNotEmpty;
+                            if (!hasDecorations) {
+                              return TextButton.icon(
+                                onPressed: () =>
+                                    _showDecorationDialog(context, item),
+                                icon: const Icon(Icons.add_circle_outline),
+                                label: Text(AppStrings.addDecoration),
+                              );
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppStrings.decorationsLabel,
+                                  style: TextStyles.text14500.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                                ),
+                                VerticalSpace(8),
+                                ...decorations.map(
+                                  (decoration) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surface,
+                                        borderRadius: BorderRadius.circular(
+                                          16,
+                                        ),
+                                        border: Border.all(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.outlineVariant,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        decoration
+                                                .decoration.decorationType
+                                                ?.detailName ??
+                                            decoration
+                                                .decoration.decorationName,
+                                        style: TextStyles.text14500,
+                                      ),
                                     ),
                                   ),
-                                  VerticalSpace(4),
-                                  Text(
-                                    item.customizationTypeName?.isNotEmpty ==
-                                            true
-                                        ? item.customizationTypeName!
-                                        : '-',
-                                    style: TextStyles.text14400.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: () =>
-                                  _showDecorationDialog(context, item),
-                              icon: const Icon(Icons.add_circle_outline),
-                              label: Text(AppStrings.addDecoration),
-                            ),
-                          ],
+                                ),
+                                VerticalSpace(8),
+                                Builder(
+                                  builder: (context) {
+                                    var isRemoving = false;
+                                    return StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return Row(
+                                          children: [
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                onPressed: isRemoving
+                                                    ? null
+                                                : () => _showDecorationDialog(
+                                                      context,
+                                                      item,
+                                                    ),
+                                            icon: const Icon(
+                                              Icons.edit_outlined,
+                                            ),
+                                            label: Text(
+                                              AppStrings.updateDecoration,
+                                            ),
+                                            style: FilledButton.styleFrom(
+                                              minimumSize: const Size(0, 48),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        HorizontalSpace(12),
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            onPressed: isRemoving
+                                                ? null
+                                                : () async {
+                                                    setState(
+                                                      () => isRemoving = true,
+                                                    );
+                                                    final lastDecoration =
+                                                        decorations.last;
+                                                    final decorationId =
+                                                        lastDecoration
+                                                            .decoration
+                                                            .decorationId;
+                                                    final response = await context
+                                                        .read<CartCubit>()
+                                                        .deleteDecorationById(
+                                                          decorationId:
+                                                              decorationId,
+                                                        );
+                                                    setState(
+                                                      () => isRemoving = false,
+                                                    );
+                                                    response.when(
+                                                      success: (_) {},
+                                                      failure: (error) {
+                                                        if (!context.mounted) {
+                                                          return;
+                                                        }
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              error.title ??
+                                                                  AppStrings
+                                                                      .unknownError,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                            icon: isRemoving
+                                                ? const SizedBox(
+                                                    height: 18,
+                                                    width: 18,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.delete_outline,
+                                                    color: AppColors.red,
+                                                  ),
+                                            label: Text(
+                                              AppStrings.removeDecoration,
+                                              style:
+                                                  TextStyles.text14400.copyWith(
+                                                color: AppColors.red,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              minimumSize: const Size(0, 48),
+                                              side: const BorderSide(
+                                                color: AppColors.red,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),

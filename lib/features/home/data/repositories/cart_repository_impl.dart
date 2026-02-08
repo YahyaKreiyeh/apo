@@ -2,14 +2,22 @@ import 'package:apo/core/models/api_response_model.dart';
 import 'package:apo/core/models/base_api_response.dart';
 import 'package:apo/core/repositories/base_repository.dart';
 import 'package:apo/features/home/data/mappers/cart_mapper.dart';
+import 'package:apo/features/home/data/mappers/decoration_create_mapper.dart';
 import 'package:apo/features/home/data/mappers/master_detail_mapper.dart';
+import 'package:apo/features/home/data/mappers/upload_image_mapper.dart';
 import 'package:apo/features/home/data/models/cart_item_dto.dart';
 import 'package:apo/features/home/data/models/cart_model.dart';
 import 'package:apo/features/home/data/models/master_detail_model.dart';
+import 'package:apo/features/home/data/models/update_cart_item_dto.dart';
+import 'package:apo/features/home/data/models/upload_image_model.dart';
+import 'package:apo/features/home/data/models/decoration_create_response_model.dart';
 import 'package:apo/features/home/data/services/cart_api_service.dart';
+import 'package:apo/features/home/domain/models/decoration_create_entity.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/domain/models/master_detail_entity.dart';
+import 'package:apo/features/home/domain/models/uploaded_image_entity.dart';
 import 'package:apo/features/home/domain/repositories/cart_repository.dart';
+import 'package:dio/dio.dart';
 
 class CartRepositoryImpl extends BaseRepository implements CartRepository {
   CartRepositoryImpl(this._apiService);
@@ -40,6 +48,29 @@ class CartRepositoryImpl extends BaseRepository implements CartRepository {
   Future<ApiResponseModel<void>> deleteCartItem({required int cartItemId}) {
     return executeVoidApiCall(
       apiCall: () async => await _apiService.deleteCartItem(cartItemId),
+    );
+  }
+
+  @override
+  Future<ApiResponseModel<void>> updateCartItem({
+    required int cartItemId,
+    required int quantity,
+    required List<int> decorationIds,
+  }) {
+    return executeVoidApiCall(
+      apiCall: () async => await _apiService.updateCartItem(
+        cartItemId,
+        UpdateCartItemDto(quantity: quantity, decorationIds: decorationIds),
+      ),
+    );
+  }
+
+  @override
+  Future<ApiResponseModel<void>> deleteDecoration({
+    required int decorationId,
+  }) {
+    return executeVoidApiCall(
+      apiCall: () async => await _apiService.deleteDecoration(decorationId),
     );
   }
 
@@ -251,6 +282,32 @@ class CartRepositoryImpl extends BaseRepository implements CartRepository {
                 .toList()
               ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
         return options;
+      },
+    );
+  }
+
+  @override
+  Future<ApiResponseModel<UploadedImageEntity>> uploadDecorationImage({
+    required MultipartFile file,
+  }) {
+    return executeApiCall<
+      UploadedImageEntity,
+      BaseApiResponse<UploadImageModel>
+    >(
+      apiCall: () => _apiService.uploadDecorationImage('DECORATION', file),
+      mapper: (response) => response.data.toEntity(),
+    );
+  }
+
+  @override
+  Future<ApiResponseModel<int>> createDecoration({
+    required DecorationCreateEntity payload,
+  }) {
+    return executeApiCall<int, BaseApiResponse<DecorationCreateResponseModel>>(
+      apiCall: () async => await _apiService.createDecoration(payload.toDto()),
+      mapper: (response) {
+        final data = response.data;
+        return data?.decorationId ?? data?.id ?? 0;
       },
     );
   }

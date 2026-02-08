@@ -2,6 +2,7 @@ import 'package:apo/core/models/result.dart';
 import 'package:apo/features/home/domain/models/cart_item_entity.dart';
 import 'package:apo/features/home/domain/models/master_detail_entity.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:flutter/foundation.dart';
 
 part 'cart_state.freezed.dart';
 
@@ -50,6 +51,7 @@ extension CartStateX on CartState {
 }
 
 class CartDecorationSelection {
+  final int? decorationId;
   final int decorationTypeId;
   final String decorationTypeName;
   final String decorationTypeCode;
@@ -71,8 +73,11 @@ class CartDecorationSelection {
   final double? labelWidth;
   final double? labelHeight;
   final String? decorationImagePath;
+  final Uint8List? decorationImageBytes;
+  final String? decorationImageName;
 
   const CartDecorationSelection({
+    this.decorationId,
     required this.decorationTypeId,
     required this.decorationTypeName,
     required this.decorationTypeCode,
@@ -94,9 +99,12 @@ class CartDecorationSelection {
     this.labelWidth,
     this.labelHeight,
     this.decorationImagePath,
+    this.decorationImageBytes,
+    this.decorationImageName,
   });
 
   CartDecorationSelection copyWith({
+    int? decorationId,
     int? decorationTypeId,
     String? decorationTypeName,
     String? decorationTypeCode,
@@ -118,9 +126,13 @@ class CartDecorationSelection {
     double? labelWidth,
     double? labelHeight,
     String? decorationImagePath,
+    Uint8List? decorationImageBytes,
+    String? decorationImageName,
     bool clearDecorationImagePath = false,
+    bool clearDecorationImageBytes = false,
   }) {
     return CartDecorationSelection(
+      decorationId: decorationId ?? this.decorationId,
       decorationTypeId: decorationTypeId ?? this.decorationTypeId,
       decorationTypeName: decorationTypeName ?? this.decorationTypeName,
       decorationTypeCode: decorationTypeCode ?? this.decorationTypeCode,
@@ -145,6 +157,10 @@ class CartDecorationSelection {
       decorationImagePath: clearDecorationImagePath
           ? null
           : (decorationImagePath ?? this.decorationImagePath),
+      decorationImageBytes: clearDecorationImageBytes
+          ? null
+          : (decorationImageBytes ?? this.decorationImageBytes),
+      decorationImageName: decorationImageName ?? this.decorationImageName,
     );
   }
 }

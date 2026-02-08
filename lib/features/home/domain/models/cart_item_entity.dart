@@ -1,3 +1,5 @@
+import 'package:apo/features/home/domain/models/cart_decoration_entity.dart';
+
 class CartItemEntity {
   final int cartItemId;
   final int productId;
@@ -7,14 +9,15 @@ class CartItemEntity {
   final String variantSku;
   final String colorName;
   final String sizeName;
-  final int? customizationTypeId;
-  final String? customizationTypeName;
+  final int? decorationTypeId;
+  final String? decorationTypeName;
   final double? unitPrice;
   final double? lineTotal;
   final String imageUrl;
   final int quantity;
   final bool hasPersonalization;
   final DateTime? addedAt;
+  final List<CartItemDecorationEntity> decorations;
 
   const CartItemEntity({
     required this.cartItemId,
@@ -25,14 +28,15 @@ class CartItemEntity {
     required this.variantSku,
     required this.colorName,
     required this.sizeName,
-    required this.customizationTypeId,
-    required this.customizationTypeName,
+    required this.decorationTypeId,
+    required this.decorationTypeName,
     required this.unitPrice,
     required this.lineTotal,
     required this.imageUrl,
     required this.quantity,
     required this.hasPersonalization,
     required this.addedAt,
+    required this.decorations,
   });
 
   CartItemEntity copyWith({
@@ -47,10 +51,11 @@ class CartItemEntity {
     String? variantSku,
     String? colorName,
     String? sizeName,
-    int? customizationTypeId,
-    String? customizationTypeName,
+    int? decorationTypeId,
+    String? decorationTypeName,
     bool? hasPersonalization,
     DateTime? addedAt,
+    List<CartItemDecorationEntity>? decorations,
   }) {
     return CartItemEntity(
       cartItemId: cartItemId ?? this.cartItemId,
@@ -61,15 +66,15 @@ class CartItemEntity {
       variantSku: variantSku ?? this.variantSku,
       colorName: colorName ?? this.colorName,
       sizeName: sizeName ?? this.sizeName,
-      customizationTypeId: customizationTypeId ?? this.customizationTypeId,
-      customizationTypeName:
-          customizationTypeName ?? this.customizationTypeName,
+      decorationTypeId: decorationTypeId ?? this.decorationTypeId,
+      decorationTypeName: decorationTypeName ?? this.decorationTypeName,
       unitPrice: unitPrice ?? this.unitPrice,
       lineTotal: lineTotal ?? this.lineTotal,
       imageUrl: imageUrl ?? this.imageUrl,
       quantity: quantity ?? this.quantity,
       hasPersonalization: hasPersonalization ?? this.hasPersonalization,
       addedAt: addedAt ?? this.addedAt,
+      decorations: decorations ?? this.decorations,
     );
   }
 }

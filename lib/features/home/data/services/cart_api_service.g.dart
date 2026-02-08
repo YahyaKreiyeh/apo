@@ -107,6 +107,56 @@ class _CartApiService implements CartApiService {
   }
 
   @override
+  Future<void> deleteDecoration(int decorationId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<void>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'decorations/${decorationId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    await _dio.fetch<void>(_options);
+  }
+
+  @override
+  Future<BaseApiResponse<void>> updateCartItem(
+    int cartItemId,
+    UpdateCartItemDto body,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
+    final _options = _setStreamType<BaseApiResponse<void>>(
+      Options(method: 'PUT', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'cart/items/${cartItemId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseApiResponse<void> _value;
+    try {
+      _value = BaseApiResponse<void>.fromJson(_result.data!, (json) => () {}());
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<BaseApiResponse<void>> clearCart() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -503,6 +553,83 @@ class _CartApiService implements CartApiService {
                   )
                   .toList()
             : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<BaseApiResponse<UploadImageModel>> uploadDecorationImage(
+    String type,
+    MultipartFile file,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'type': type};
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.files.add(MapEntry('file', file));
+    final _options = _setStreamType<BaseApiResponse<UploadImageModel>>(
+      Options(
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: 'multipart/form-data',
+          )
+          .compose(
+            _dio.options,
+            'upload/image',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseApiResponse<UploadImageModel> _value;
+    try {
+      _value = BaseApiResponse<UploadImageModel>.fromJson(
+        _result.data!,
+        (json) => UploadImageModel.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<BaseApiResponse<DecorationCreateResponseModel>> createDecoration(
+    DecorationCreateDto body,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
+    final _options =
+        _setStreamType<BaseApiResponse<DecorationCreateResponseModel>>(
+          Options(method: 'POST', headers: _headers, extra: _extra)
+              .compose(
+                _dio.options,
+                'decorations',
+                queryParameters: queryParameters,
+                data: _data,
+              )
+              .copyWith(
+                baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+              ),
+        );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseApiResponse<DecorationCreateResponseModel> _value;
+    try {
+      _value = BaseApiResponse<DecorationCreateResponseModel>.fromJson(
+        _result.data!,
+        (json) => DecorationCreateResponseModel.fromJson(
+          json as Map<String, dynamic>,
+        ),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);

@@ -2,7 +2,11 @@ import 'package:apo/core/models/base_api_response.dart';
 import 'package:apo/core/networking/api_constants.dart';
 import 'package:apo/features/home/data/models/cart_item_dto.dart';
 import 'package:apo/features/home/data/models/cart_model.dart';
+import 'package:apo/features/home/data/models/decoration_create_dto.dart';
+import 'package:apo/features/home/data/models/decoration_create_response_model.dart';
 import 'package:apo/features/home/data/models/master_detail_model.dart';
+import 'package:apo/features/home/data/models/update_cart_item_dto.dart';
+import 'package:apo/features/home/data/models/upload_image_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -20,6 +24,15 @@ abstract class CartApiService {
 
   @DELETE('${ApiConstants.cartItems}/{id}')
   Future<BaseApiResponse<void>> deleteCartItem(@Path('id') int cartItemId);
+
+  @DELETE('${ApiConstants.decorations}/{id}')
+  Future<void> deleteDecoration(@Path('id') int decorationId);
+
+  @PUT('${ApiConstants.cartItems}/{id}')
+  Future<BaseApiResponse<void>> updateCartItem(
+    @Path('id') int cartItemId,
+    @Body() UpdateCartItemDto body,
+  );
 
   @DELETE(ApiConstants.cart)
   Future<BaseApiResponse<void>> clearCart();
@@ -59,4 +72,16 @@ abstract class CartApiService {
 
   @GET(ApiConstants.embTypeDetails)
   Future<BaseApiResponse<List<MasterDetailModel>>> fetchEmbTypes();
+
+  @MultiPart()
+  @POST(ApiConstants.uploadImage)
+  Future<BaseApiResponse<UploadImageModel>> uploadDecorationImage(
+    @Query('type') String type,
+    @Part(name: 'file') MultipartFile file,
+  );
+
+  @POST(ApiConstants.decorations)
+  Future<BaseApiResponse<DecorationCreateResponseModel>> createDecoration(
+    @Body() DecorationCreateDto body,
+  );
 }

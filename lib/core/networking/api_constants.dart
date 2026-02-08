@@ -31,6 +31,8 @@ class ApiConstants {
   static const String embTypeDetails = 'masters/EMB_TYPE/details';
   static const String cartItems = 'cart/items';
   static const String cart = 'cart';
+  static const String uploadImage = 'upload/image';
+  static const String decorations = 'decorations';
 }
 
 class ApiErrors {

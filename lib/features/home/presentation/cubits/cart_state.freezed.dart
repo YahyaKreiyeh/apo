@@ -12,7 +12,7 @@ part of 'cart_state.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$CartState {
+mixin _$CartState implements DiagnosticableTreeMixin {
 
  List<CartItemEntity> get items; Result<void> get addStatus; Result<void> get cartStatus; Result<List<MasterDetailEntity>> get decorationTypeStatus; List<MasterDetailEntity> get decorationTypeOptions; Result<List<MasterDetailEntity>> get heatTransferTypeStatus; List<MasterDetailEntity> get heatTransferTypeOptions; Result<List<MasterDetailEntity>> get screenPrintColorStatus; List<MasterDetailEntity> get screenPrintColorOptions; Result<List<MasterDetailEntity>> get screenPrintGarmentStatus; List<MasterDetailEntity> get screenPrintGarmentOptions; Result<List<MasterDetailEntity>> get screenPrintLocationStatus; List<MasterDetailEntity> get screenPrintLocationOptions; Result<List<MasterDetailEntity>> get leatherColorStatus; List<MasterDetailEntity> get leatherColorOptions; Result<List<MasterDetailEntity>> get patchTypeStatus; List<MasterDetailEntity> get patchTypeOptions; Result<List<MasterDetailEntity>> get labelTypeStatus; List<MasterDetailEntity> get labelTypeOptions; Result<List<MasterDetailEntity>> get embOptionsStatus; List<MasterDetailEntity> get embOptions; Result<List<MasterDetailEntity>> get embTypesStatus; List<MasterDetailEntity> get embTypes; Map<String, List<CartDecorationSelection>> get decorationsByItem;
 /// Create a copy of CartState
@@ -22,6 +22,12 @@ mixin _$CartState {
 $CartStateCopyWith<CartState> get copyWith => _$CartStateCopyWithImpl<CartState>(this as CartState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'CartState'))
+    ..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('addStatus', addStatus))..add(DiagnosticsProperty('cartStatus', cartStatus))..add(DiagnosticsProperty('decorationTypeStatus', decorationTypeStatus))..add(DiagnosticsProperty('decorationTypeOptions', decorationTypeOptions))..add(DiagnosticsProperty('heatTransferTypeStatus', heatTransferTypeStatus))..add(DiagnosticsProperty('heatTransferTypeOptions', heatTransferTypeOptions))..add(DiagnosticsProperty('screenPrintColorStatus', screenPrintColorStatus))..add(DiagnosticsProperty('screenPrintColorOptions', screenPrintColorOptions))..add(DiagnosticsProperty('screenPrintGarmentStatus', screenPrintGarmentStatus))..add(DiagnosticsProperty('screenPrintGarmentOptions', screenPrintGarmentOptions))..add(DiagnosticsProperty('screenPrintLocationStatus', screenPrintLocationStatus))..add(DiagnosticsProperty('screenPrintLocationOptions', screenPrintLocationOptions))..add(DiagnosticsProperty('leatherColorStatus', leatherColorStatus))..add(DiagnosticsProperty('leatherColorOptions', leatherColorOptions))..add(DiagnosticsProperty('patchTypeStatus', patchTypeStatus))..add(DiagnosticsProperty('patchTypeOptions', patchTypeOptions))..add(DiagnosticsProperty('labelTypeStatus', labelTypeStatus))..add(DiagnosticsProperty('labelTypeOptions', labelTypeOptions))..add(DiagnosticsProperty('embOptionsStatus', embOptionsStatus))..add(DiagnosticsProperty('embOptions', embOptions))..add(DiagnosticsProperty('embTypesStatus', embTypesStatus))..add(DiagnosticsProperty('embTypes', embTypes))..add(DiagnosticsProperty('decorationsByItem', decorationsByItem));
+}
 
 @override
 bool operator ==(Object other) {
@@ -33,7 +39,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hashAll([runtimeType,const DeepCollectionEquality().hash(items),addStatus,cartStatus,decorationTypeStatus,const DeepCollectionEquality().hash(decorationTypeOptions),heatTransferTypeStatus,const DeepCollectionEquality().hash(heatTransferTypeOptions),screenPrintColorStatus,const DeepCollectionEquality().hash(screenPrintColorOptions),screenPrintGarmentStatus,const DeepCollectionEquality().hash(screenPrintGarmentOptions),screenPrintLocationStatus,const DeepCollectionEquality().hash(screenPrintLocationOptions),leatherColorStatus,const DeepCollectionEquality().hash(leatherColorOptions),patchTypeStatus,const DeepCollectionEquality().hash(patchTypeOptions),labelTypeStatus,const DeepCollectionEquality().hash(labelTypeOptions),embOptionsStatus,const DeepCollectionEquality().hash(embOptions),embTypesStatus,const DeepCollectionEquality().hash(embTypes),const DeepCollectionEquality().hash(decorationsByItem)]);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'CartState(items: $items, addStatus: $addStatus, cartStatus: $cartStatus, decorationTypeStatus: $decorationTypeStatus, decorationTypeOptions: $decorationTypeOptions, heatTransferTypeStatus: $heatTransferTypeStatus, heatTransferTypeOptions: $heatTransferTypeOptions, screenPrintColorStatus: $screenPrintColorStatus, screenPrintColorOptions: $screenPrintColorOptions, screenPrintGarmentStatus: $screenPrintGarmentStatus, screenPrintGarmentOptions: $screenPrintGarmentOptions, screenPrintLocationStatus: $screenPrintLocationStatus, screenPrintLocationOptions: $screenPrintLocationOptions, leatherColorStatus: $leatherColorStatus, leatherColorOptions: $leatherColorOptions, patchTypeStatus: $patchTypeStatus, patchTypeOptions: $patchTypeOptions, labelTypeStatus: $labelTypeStatus, labelTypeOptions: $labelTypeOptions, embOptionsStatus: $embOptionsStatus, embOptions: $embOptions, embTypesStatus: $embTypesStatus, embTypes: $embTypes, decorationsByItem: $decorationsByItem)';
 }
 
@@ -336,7 +342,7 @@ return $default(_that.items,_that.addStatus,_that.cartStatus,_that.decorationTyp
 /// @nodoc
 
 
-class _CartState implements CartState {
+class _CartState with DiagnosticableTreeMixin implements CartState {
   const _CartState({final  List<CartItemEntity> items = const [], this.addStatus = const Result.empty(), this.cartStatus = const Result.empty(), this.decorationTypeStatus = const Result.empty(), final  List<MasterDetailEntity> decorationTypeOptions = const <MasterDetailEntity>[], this.heatTransferTypeStatus = const Result.empty(), final  List<MasterDetailEntity> heatTransferTypeOptions = const <MasterDetailEntity>[], this.screenPrintColorStatus = const Result.empty(), final  List<MasterDetailEntity> screenPrintColorOptions = const <MasterDetailEntity>[], this.screenPrintGarmentStatus = const Result.empty(), final  List<MasterDetailEntity> screenPrintGarmentOptions = const <MasterDetailEntity>[], this.screenPrintLocationStatus = const Result.empty(), final  List<MasterDetailEntity> screenPrintLocationOptions = const <MasterDetailEntity>[], this.leatherColorStatus = const Result.empty(), final  List<MasterDetailEntity> leatherColorOptions = const <MasterDetailEntity>[], this.patchTypeStatus = const Result.empty(), final  List<MasterDetailEntity> patchTypeOptions = const <MasterDetailEntity>[], this.labelTypeStatus = const Result.empty(), final  List<MasterDetailEntity> labelTypeOptions = const <MasterDetailEntity>[], this.embOptionsStatus = const Result.empty(), final  List<MasterDetailEntity> embOptions = const <MasterDetailEntity>[], this.embTypesStatus = const Result.empty(), final  List<MasterDetailEntity> embTypes = const <MasterDetailEntity>[], final  Map<String, List<CartDecorationSelection>> decorationsByItem = const <String, List<CartDecorationSelection>>{}}): _items = items,_decorationTypeOptions = decorationTypeOptions,_heatTransferTypeOptions = heatTransferTypeOptions,_screenPrintColorOptions = screenPrintColorOptions,_screenPrintGarmentOptions = screenPrintGarmentOptions,_screenPrintLocationOptions = screenPrintLocationOptions,_leatherColorOptions = leatherColorOptions,_patchTypeOptions = patchTypeOptions,_labelTypeOptions = labelTypeOptions,_embOptions = embOptions,_embTypes = embTypes,_decorationsByItem = decorationsByItem;
   
 
@@ -444,6 +450,12 @@ class _CartState implements CartState {
 _$CartStateCopyWith<_CartState> get copyWith => __$CartStateCopyWithImpl<_CartState>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'CartState'))
+    ..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('addStatus', addStatus))..add(DiagnosticsProperty('cartStatus', cartStatus))..add(DiagnosticsProperty('decorationTypeStatus', decorationTypeStatus))..add(DiagnosticsProperty('decorationTypeOptions', decorationTypeOptions))..add(DiagnosticsProperty('heatTransferTypeStatus', heatTransferTypeStatus))..add(DiagnosticsProperty('heatTransferTypeOptions', heatTransferTypeOptions))..add(DiagnosticsProperty('screenPrintColorStatus', screenPrintColorStatus))..add(DiagnosticsProperty('screenPrintColorOptions', screenPrintColorOptions))..add(DiagnosticsProperty('screenPrintGarmentStatus', screenPrintGarmentStatus))..add(DiagnosticsProperty('screenPrintGarmentOptions', screenPrintGarmentOptions))..add(DiagnosticsProperty('screenPrintLocationStatus', screenPrintLocationStatus))..add(DiagnosticsProperty('screenPrintLocationOptions', screenPrintLocationOptions))..add(DiagnosticsProperty('leatherColorStatus', leatherColorStatus))..add(DiagnosticsProperty('leatherColorOptions', leatherColorOptions))..add(DiagnosticsProperty('patchTypeStatus', patchTypeStatus))..add(DiagnosticsProperty('patchTypeOptions', patchTypeOptions))..add(DiagnosticsProperty('labelTypeStatus', labelTypeStatus))..add(DiagnosticsProperty('labelTypeOptions', labelTypeOptions))..add(DiagnosticsProperty('embOptionsStatus', embOptionsStatus))..add(DiagnosticsProperty('embOptions', embOptions))..add(DiagnosticsProperty('embTypesStatus', embTypesStatus))..add(DiagnosticsProperty('embTypes', embTypes))..add(DiagnosticsProperty('decorationsByItem', decorationsByItem));
+}
 
 @override
 bool operator ==(Object other) {
@@ -455,7 +467,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_items),addStatus,cartStatus,decorationTypeStatus,const DeepCollectionEquality().hash(_decorationTypeOptions),heatTransferTypeStatus,const DeepCollectionEquality().hash(_heatTransferTypeOptions),screenPrintColorStatus,const DeepCollectionEquality().hash(_screenPrintColorOptions),screenPrintGarmentStatus,const DeepCollectionEquality().hash(_screenPrintGarmentOptions),screenPrintLocationStatus,const DeepCollectionEquality().hash(_screenPrintLocationOptions),leatherColorStatus,const DeepCollectionEquality().hash(_leatherColorOptions),patchTypeStatus,const DeepCollectionEquality().hash(_patchTypeOptions),labelTypeStatus,const DeepCollectionEquality().hash(_labelTypeOptions),embOptionsStatus,const DeepCollectionEquality().hash(_embOptions),embTypesStatus,const DeepCollectionEquality().hash(_embTypes),const DeepCollectionEquality().hash(_decorationsByItem)]);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'CartState(items: $items, addStatus: $addStatus, cartStatus: $cartStatus, decorationTypeStatus: $decorationTypeStatus, decorationTypeOptions: $decorationTypeOptions, heatTransferTypeStatus: $heatTransferTypeStatus, heatTransferTypeOptions: $heatTransferTypeOptions, screenPrintColorStatus: $screenPrintColorStatus, screenPrintColorOptions: $screenPrintColorOptions, screenPrintGarmentStatus: $screenPrintGarmentStatus, screenPrintGarmentOptions: $screenPrintGarmentOptions, screenPrintLocationStatus: $screenPrintLocationStatus, screenPrintLocationOptions: $screenPrintLocationOptions, leatherColorStatus: $leatherColorStatus, leatherColorOptions: $leatherColorOptions, patchTypeStatus: $patchTypeStatus, patchTypeOptions: $patchTypeOptions, labelTypeStatus: $labelTypeStatus, labelTypeOptions: $labelTypeOptions, embOptionsStatus: $embOptionsStatus, embOptions: $embOptions, embTypesStatus: $embTypesStatus, embTypes: $embTypes, decorationsByItem: $decorationsByItem)';
 }
 

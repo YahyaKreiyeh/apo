@@ -146,6 +146,9 @@ class AppStrings {
   static const String personalization = 'Personalization';
   static const String decorationType = 'Decoration Type';
   static const String addDecoration = 'Add Decoration';
+  static const String updateDecoration = 'Update Decoration';
+  static const String removeDecoration = 'Remove Decoration';
+  static const String decorationsLabel = 'Decorations:';
   static const String addDecorationTitle = 'Add Decoration';
   static const String addDecorationSubtitle =
       'Customize your product with embroidery, prints, or other decorations';
