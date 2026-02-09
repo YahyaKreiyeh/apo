@@ -15,8 +15,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:apo/core/routing/route_names.dart';
 
-class OrdersView extends StatelessWidget {
+class OrdersView extends StatefulWidget {
   const OrdersView({super.key});
+
+  @override
+  State<OrdersView> createState() => _OrdersViewState();
+}
+
+class _OrdersViewState extends State<OrdersView> {
+  Future<void> _openOrderDetails(int orderId) async {
+    final didReorder = await context.pushNamed<bool>(
+      RouteNames.orderDetails.name,
+      pathParameters: {'id': orderId.toString()},
+    );
+    if (!mounted || didReorder != true) return;
+    await context.read<OrdersCubit>().loadOrders(isRefresh: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,10 +127,7 @@ class OrdersView extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final order = state.items[index];
                             return InkWell(
-                              onTap: () => context.pushNamed(
-                                RouteNames.orderDetails.name,
-                                pathParameters: {'id': order.jobId.toString()},
-                              ),
+                              onTap: () => _openOrderDetails(order.jobId),
                               borderRadius: BorderRadius.circular(16),
                               child: _OrderCard(order: order),
                             );

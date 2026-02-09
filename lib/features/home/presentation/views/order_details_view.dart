@@ -13,55 +13,80 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class OrderDetailsView extends StatelessWidget {
+class OrderDetailsView extends StatefulWidget {
   const OrderDetailsView({super.key});
 
   @override
+  State<OrderDetailsView> createState() => _OrderDetailsViewState();
+}
+
+class _OrderDetailsViewState extends State<OrderDetailsView> {
+  bool _didReorder = false;
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
-      builder: (context, state) {
-        final status = state.status;
-        final isReordering = state.reorderStatus.isLoading;
-        final canReorder = status is Success<OrderDetailEntity>;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              status.successValue?.jobNumber ?? AppStrings.orderDetails,
-            ),
-          ),
-          bottomNavigationBar: canReorder
-              ? SafeArea(
-                  minimum: const EdgeInsets.all(Constants.defaultPadding),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isReordering
-                          ? () {}
-                          : () => context.read<OrderDetailsCubit>().reorder(),
-                      child: isReordering
-                          ? const CircularProgressIndicator()
-                          : Text(AppStrings.reorder),
-                    ),
-                  ),
-                )
-              : null,
-          body: switch (status) {
-            Loading() => const _OrderDetailsLoading(),
-            Failure() => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(Constants.defaultPadding),
-                child: Text(
-                  status.failureMessage,
-                  textAlign: TextAlign.center,
-                  style: TextStyles.text14400,
+    return BlocListener<OrderDetailsCubit, OrderDetailsState>(
+      listenWhen: (previous, current) =>
+          !previous.reorderStatus.isSuccess && current.reorderStatus.isSuccess,
+      listener: (context, state) => _didReorder = true,
+      child: BlocBuilder<OrderDetailsCubit, OrderDetailsState>(
+        builder: (context, state) {
+          final status = state.status;
+          final isReordering = state.reorderStatus.isLoading;
+          final canReorder = status is Success<OrderDetailEntity>;
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              Navigator.of(context).pop(_didReorder);
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                leading: BackButton(
+                  onPressed: () => Navigator.of(context).pop(_didReorder),
+                ),
+                title: Text(
+                  status.successValue?.jobNumber ?? AppStrings.orderDetails,
                 ),
               ),
+              bottomNavigationBar: canReorder
+                  ? SafeArea(
+                      minimum: const EdgeInsets.all(Constants.defaultPadding),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isReordering
+                              ? () {}
+                              : () =>
+                                    context.read<OrderDetailsCubit>().reorder(),
+                          child: isReordering
+                              ? const CircularProgressIndicator()
+                              : Text(AppStrings.reorder),
+                        ),
+                      ),
+                    )
+                  : null,
+              body: switch (status) {
+                Loading() => const _OrderDetailsLoading(),
+                Failure() => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(Constants.defaultPadding),
+                    child: Text(
+                      status.failureMessage,
+                      textAlign: TextAlign.center,
+                      style: TextStyles.text14400,
+                    ),
+                  ),
+                ),
+                Success(data: final order) => _OrderDetailsContent(
+                  order: order,
+                ),
+                _ => const SizedBox.shrink(),
+              },
             ),
-            Success(data: final order) => _OrderDetailsContent(order: order),
-            _ => const SizedBox.shrink(),
-          },
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -278,7 +303,7 @@ class _OrderItemCard extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: item.imageUrl,
                       fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) =>
+                      errorWidget: (context, url, error) =>
                           const NetworkImagePlaceholder(),
                     ),
                   ),
