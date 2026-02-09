@@ -66,7 +66,7 @@ class _CheckoutApiService implements CheckoutApiService {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'jobs/checkout',
+            'jobs',
             queryParameters: queryParameters,
             data: _data,
           )

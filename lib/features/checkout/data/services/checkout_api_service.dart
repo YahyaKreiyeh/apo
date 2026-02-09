@@ -20,7 +20,7 @@ abstract class CheckoutApiService {
     @Body() QuoteRequestDto body,
   );
 
-  @POST(ApiConstants.checkout)
+  @POST(ApiConstants.jobs)
   Future<BaseApiResponse<void>> checkout(@Body() JobCheckoutDto body);
 
   @GET(ApiConstants.shipViaDetails)
@@ -36,7 +36,5 @@ abstract class CheckoutApiService {
   Future<BaseApiResponse<List<ShipViaOptionModel>>> fetchSheetTypeDetails();
 
   @POST(ApiConstants.transfers)
-  Future<BaseApiResponse<void>> createTransfer(
-    @Body() CreateTransferDto body,
-  );
+  Future<BaseApiResponse<void>> createTransfer(@Body() CreateTransferDto body);
 }

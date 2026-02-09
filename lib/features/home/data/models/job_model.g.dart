@@ -7,20 +7,24 @@ part of 'job_model.dart';
 // **************************************************************************
 
 JobModel _$JobModelFromJson(Map<String, dynamic> json) => JobModel(
-  jobId: (json['jobId'] as num).toInt(),
-  jobNumber: json['jobNumber'] as String,
-  jobOwner: json['jobOwner'] as String,
-  poNumber: json['poNumber'] as String?,
-  statusDetailName: json['statusDetailName'] as String,
-  requestedShipDate: json['requestedShipDate'] == null
-      ? null
-      : DateTime.parse(json['requestedShipDate'] as String),
-  createdAt: json['createdAt'] == null
-      ? null
-      : DateTime.parse(json['createdAt'] as String),
-  totalAmount: json['totalAmount'] as num,
-  itemsCount: JobModel._itemsCountFromJson(json['items']),
-  transfersCount: JobModel._transfersCountFromJson(json['transfers']),
+  jobId: JobModel._toInt(json['jobId']),
+  jobNumber: JobModel._toStringOrEmpty(json['jobNumber']),
+  jobOwner: JobModel._toStringOrEmpty(JobModel._readJobOwner(json, 'jobOwner')),
+  poNumber: JobModel._toNullableString(
+    JobModel._readPoNumber(json, 'poNumber'),
+  ),
+  statusDetailName: JobModel._toStringOrEmpty(
+    JobModel._readStatusDetailName(json, 'statusDetailName'),
+  ),
+  requestedShipDate: JobModel._toDateTime(
+    JobModel._readRequestedShipDate(json, 'requestedShipDate'),
+  ),
+  createdAt: JobModel._toDateTime(json['createdAt']),
+  totalAmount: JobModel._toNum(json['totalAmount']),
+  itemsCount: JobModel._toCount(JobModel._readItems(json, 'itemsCount')),
+  transfersCount: JobModel._toCount(
+    JobModel._readTransfers(json, 'transfersCount'),
+  ),
 );
 
 Map<String, dynamic> _$JobModelToJson(JobModel instance) => <String, dynamic>{

@@ -1,65 +1,77 @@
 class JobCheckoutDto {
-  final JobCheckoutAddressDto shippingAddress;
-  final JobCheckoutAddressDto billingAddress;
-  final String customerNotes;
+  final int customerId;
+  final bool isApolloProducts;
+  final JobCheckoutShippingDetailsDto shippingDetails;
   final String jobDescription;
   final String jobComment;
-  final List<int> transferIds;
-  final String shipViaCode;
-  final String shippingInstructions;
-  final String? requestedShipDate;
-  final bool mustShipByDate;
+  final List<int> additionalServiceIds;
+  final String customerNotes;
+  final String orderDate;
+  final String orderType;
+  final String customerNumber;
+  final String customerPO;
+  final bool isBillingSameAsShipping;
 
   const JobCheckoutDto({
-    required this.shippingAddress,
-    required this.billingAddress,
-    required this.customerNotes,
+    required this.customerId,
+    required this.isApolloProducts,
+    required this.shippingDetails,
     required this.jobDescription,
     required this.jobComment,
-    required this.transferIds,
-    required this.shipViaCode,
-    required this.shippingInstructions,
-    required this.requestedShipDate,
-    required this.mustShipByDate,
+    required this.additionalServiceIds,
+    required this.customerNotes,
+    required this.orderDate,
+    required this.orderType,
+    required this.customerNumber,
+    required this.customerPO,
+    required this.isBillingSameAsShipping,
   });
 
   Map<String, dynamic> toJson() => {
-    'shippingAddress': shippingAddress.toJson(),
-    'billingAddress': billingAddress.toJson(),
-    'customerNotes': customerNotes,
+    'customerId': customerId,
+    'isApolloProducts': isApolloProducts,
+    'shippingDetails': shippingDetails.toJson(),
     'jobDescription': jobDescription,
     'jobComment': jobComment,
-    'transferIds': transferIds,
-    'shipViaCode': shipViaCode,
-    'shippingInstructions': shippingInstructions,
-    'requestedShipDate': requestedShipDate,
-    'mustShipByDate': mustShipByDate,
+    'additionalServiceIds': additionalServiceIds,
+    'customerNotes': customerNotes,
+    'orderDate': orderDate,
+    'orderType': orderType,
+    'customerNumber': customerNumber,
+    'customerPO': customerPO,
+    'isBillingSameAsShipping': isBillingSameAsShipping,
   };
 }
 
-class JobCheckoutAddressDto {
-  final String addressLine1;
-  final String addressLine2;
+class JobCheckoutShippingDetailsDto {
+  final String shipViaCode;
+  final String streetAddress;
+  final String aptBuildingSuite;
   final String city;
   final String state;
+  final String postalCode;
   final String country;
-  final String zipCode;
+  final String shippingInstructions;
 
-  const JobCheckoutAddressDto({
-    required this.addressLine1,
-    required this.addressLine2,
+  const JobCheckoutShippingDetailsDto({
+    required this.shipViaCode,
+    required this.streetAddress,
+    required this.aptBuildingSuite,
     required this.city,
     required this.state,
+    required this.postalCode,
     required this.country,
-    required this.zipCode,
+    required this.shippingInstructions,
   });
 
   Map<String, dynamic> toJson() => {
-    'addressLine1': addressLine1,
-    'addressLine2': addressLine2,
+    'shipViaCode': shipViaCode,
+    'streetAddress': streetAddress,
+    'aptBuildingSuite': aptBuildingSuite,
     'city': city,
     'state': state,
+    'postalCode': postalCode,
     'country': country,
-    'zipCode': zipCode,
+    'shippingInstructions': shippingInstructions,
   };
 }

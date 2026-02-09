@@ -31,14 +31,7 @@ class CheckoutCubit extends Cubit<CheckoutState>
        _createTransferUseCase = createTransferUseCase,
        _getTransferTypeOptionsUseCase = getTransferTypeOptionsUseCase,
        _getSheetTypeOptionsUseCase = getSheetTypeOptionsUseCase,
-       super(CheckoutState(type: type)) {
-    if (type == CheckoutType.checkout) {
-      Future.microtask(() async {
-        await fetchShipViaOptions();
-        await fetchTransferSelections();
-      });
-    }
-  }
+       super(CheckoutState(type: type));
 
   final RequestQuoteUseCase _requestQuoteUseCase;
   final CheckoutUseCase _checkoutUseCase;
@@ -197,7 +190,9 @@ class CheckoutCubit extends Cubit<CheckoutState>
         );
       },
       failure: (error) {
-        safeEmit(state.copyWith(transferTypeStatus: Result.failure(error: error)));
+        safeEmit(
+          state.copyWith(transferTypeStatus: Result.failure(error: error)),
+        );
       },
     );
   }
@@ -237,14 +232,19 @@ class CheckoutCubit extends Cubit<CheckoutState>
     return _createTransferUseCase(parameters);
   }
 
-  Future<void> submit({required List<CartItemEntity> items}) async {
+  Future<void> submit({
+    required List<CartItemEntity> items,
+    JobCheckoutParameters? checkoutParameters,
+  }) async {
     if (state.status.isLoading) return;
     safeEmit(state.copyWith(status: const Result.loading()));
     final response = switch (state.type) {
       CheckoutType.requestQuote => await _requestQuoteUseCase(
         _buildQuoteParameters(items),
       ),
-      CheckoutType.checkout => await _checkoutUseCase(_buildJobParameters()),
+      CheckoutType.checkout => await _checkoutUseCase(
+        checkoutParameters ?? _buildJobParameters(),
+      ),
     };
     response.when(
       success: (_) {
@@ -290,30 +290,27 @@ class CheckoutCubit extends Cubit<CheckoutState>
 
   JobCheckoutParameters _buildJobParameters() {
     return JobCheckoutParameters(
-      shippingAddress: JobCheckoutAddressParameters(
-        addressLine1: state.shipLine1.trim(),
-        addressLine2: state.shipLine2.trim(),
+      customerId: 0,
+      isApolloProducts: true,
+      shippingDetails: JobCheckoutShippingDetailsParameters(
+        shipViaCode: state.selectedShipViaCode ?? '',
+        streetAddress: state.shipLine1.trim(),
+        aptBuildingSuite: state.shipLine2.trim(),
         city: state.shipCity.trim(),
         state: state.shipState.trim(),
+        postalCode: state.shipZip.trim(),
         country: '',
-        zipCode: state.shipZip.trim(),
+        shippingInstructions: state.shippingInstructions.trim(),
       ),
-      billingAddress: JobCheckoutAddressParameters(
-        addressLine1: state.billLine1.trim(),
-        addressLine2: state.billLine2.trim(),
-        city: state.billCity.trim(),
-        state: state.billState.trim(),
-        country: '',
-        zipCode: state.billZip.trim(),
-      ),
-      customerNotes: state.customerNotes.trim(),
       jobDescription: state.jobDescription.trim(),
       jobComment: state.jobComment.trim(),
-      transferIds: List<int>.from(state.selectedTransferIds),
-      shipViaCode: state.selectedShipViaCode ?? '',
-      shippingInstructions: state.shippingInstructions.trim(),
-      requestedShipDate: state.requestedShipDate,
-      mustShipByDate: state.mustShipByRequestedDate,
+      additionalServiceIds: const <int>[],
+      customerNotes: state.customerNotes.trim(),
+      orderDate: DateTime.now().toUtc(),
+      orderType: '',
+      customerNumber: '',
+      customerPO: '',
+      isBillingSameAsShipping: false,
     );
   }
 }
